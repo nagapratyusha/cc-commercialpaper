@@ -31,6 +31,8 @@ import (
 
 var quotePrefix = "qt:"
 var propertyPrefix = "pt:"
+var agreementPrefix = "ag:"
+var deedPrefix = "de:"
 
 
 var cpPrefix = "cp:"
@@ -110,18 +112,81 @@ type Property struct {
 	Longitude    string  `json:"longitude"`
 	Histories    []History `json:"history"`  
 	Litigations  []Litigation  `json:"litigations"`
+	Price    string  `json:"price"`
+	Parameter1 string  `json:"parameter1"`
+	Parameter2 string  `json:"parameter2"`
+	Parameter3 string  `json:"parameter3"`
+	Parameter4 string  `json:"parameter4"`
+	Parameter5 string  `json:"parameter5"`
+	Parameter6 string  `json:"parameter6"`
+}
+
+type SaleAgreement struct {
+	AgreementNo string  `json:"agreementno"`
+	Property Property `json:"property"`
+	Parties []Party `json:"buyer"`
+	Loan Loan `json:"loan"`
+	Parameter1 string  `json:"parameter1"`
+	Parameter2 string  `json:"parameter2"`
+	Parameter3 string  `json:"parameter3"`
+	Parameter4 string  `json:"parameter4"`
+	Parameter5 string  `json:"parameter5"`
+	Parameter6 string  `json:"parameter6"`
+	SignedOn string  `json:"signedon"`
+}
+
+type SaleDeed struct {
+	DeedNo string  `json:"deedno"`
+	SaleAgreement SaleAgreement `json:"saleagreement"`
+	Registrar Registrar `json:"registrar"`
+	Settlement []Settlement `json:"settlement"`
+	SignedOn string  `json:"signedon"`
 }
 
 type History struct {
 	HistoryOwner     string  `json:"owner"`
 	Location    string  `json:"location"`
-	from       string `json:"from"`
-	to       string     `json:"to"`
+	From       string `json:"from"`
+	To       string     `json:"to"`
 }
 
 type Litigation struct {
-	data     string  `json:"data"`
+	Data     string  `json:"data"`
 }
+
+type Party struct {
+	PartyName     string  `json:"name"`
+	PartyDOB    string  `json:"dob"`
+	PartyIDType    string  `json:"idtype"`
+	PartyIDNumber    string  `json:"idnumber"`
+	PartyAddress    string  `json:"address"`
+	PartyType    string `json:"type"`
+}
+
+type Loan struct {
+	Bank     string  `json:"bank"`
+	Branch    string  `json:"branch"`
+	LoanAmount    string  `json:"amount"`
+	LoanType    string  `json:"type"`
+	LoanPercentage    string  `json:"percentage"`
+	ROI    string  `json:"roi"`
+	Tenure string  `json:"tenure"`
+	ApprovedOn string  `json:"aprovedon"`
+	AppliedOn string  `json:"appliedon"`
+}
+
+type Registrar struct {
+	Name     string  `json:"name"`
+	Location    string  `json:"location"`
+}
+
+type Settlement struct {
+	SettlementType     string  `json:"type"`
+	SettlementAmount    string  `json:"amount"`
+	SettlementRef		string `json:"ref"`
+	SettlementDate		string `json:"date"`
+}
+
 
 type CP struct {
 	CUSIP     string  `json:"cusip"`
@@ -155,6 +220,9 @@ func (t *SimpleChaincode) Init(stub shim.ChaincodeStubInterface, function string
 	fmt.Println("Initializing paper keys collection")
 	var blank []string
 	var blank1 []string
+	var blank2 []string
+	var blank3 []string
+
 	blankBytes, _ := json.Marshal(&blank)
 	err := stub.PutState("PaperKeys", blankBytes)
 	if err != nil {
@@ -164,6 +232,18 @@ func (t *SimpleChaincode) Init(stub shim.ChaincodeStubInterface, function string
 	blankBytes1, _ := json.Marshal(&blank1)
 	err1 := stub.PutState("PropertyKeys", blankBytes1)
 	if err1 != nil {
+		fmt.Println("Failed to initialize paper key collection")
+	}
+
+	blankBytes2, _ := json.Marshal(&blank2)
+	err2 := stub.PutState("AgreementKeys", blankBytes2)
+	if err2 != nil {
+		fmt.Println("Failed to initialize paper key collection")
+	}
+
+	blankBytes3, _ := json.Marshal(&blank3)
+	err3 := stub.PutState("DeedKeys", blankBytes3)
+	if err3 != nil {
 		fmt.Println("Failed to initialize paper key collection")
 	}
 
@@ -320,7 +400,7 @@ func (t *SimpleChaincode) issueQuote(stub shim.ChaincodeStubInterface, args []st
 
 		// Update the paper keys by adding the new key
 		fmt.Println("Getting Paper Keys")
-		keysBytes, err := stub.GetState("PropertyKeys")
+		keysBytes, err := stub.GetState("QuoteKeys")
 		if err != nil {
 			fmt.Println("Error retrieving paper keys")
 			return nil, errors.New("Error retrieving paper keys")
@@ -346,8 +426,8 @@ func (t *SimpleChaincode) issueQuote(stub shim.ChaincodeStubInterface, args []st
 				fmt.Println("Error marshalling keys")
 				return nil, errors.New("Error marshalling the keys")
 			}
-			fmt.Println("Put state on PropertyKeys")
-			err = stub.PutState("PropertyKeys", keysBytesToWrite)
+			fmt.Println("Put state on QuoteKeys")
+			err = stub.PutState("QuoteKeys", keysBytesToWrite)
 			if err != nil {
 				fmt.Println("Error writting keys back")
 				return nil, errors.New("Error writing the keys back")
@@ -539,6 +619,316 @@ func GetAllProperties(stub shim.ChaincodeStubInterface) ([]Property, error) {
 
 	return allProperties, nil
 }
+
+
+
+//Agreement
+
+
+func (t *SimpleChaincode) issueSaleAgreement(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
+
+	
+	//need one arg
+	if len(args) != 1 {
+		fmt.Println("error invalid arguments")
+		return nil, errors.New("Incorrect number of arguments. Expecting Quotation record")
+	}
+
+	var saleAgreement SaleAgreement
+	var err error
+	//var account Account
+
+	fmt.Println("Unmarshalling Property")
+	err = json.Unmarshal([]byte(args[0]), &saleAgreement)
+	if err != nil {
+		fmt.Println("error invalid saleAgreement issue" + args[0])
+		return nil, errors.New("Invalid saleAgreement issue" + args[0])
+	}
+
+	
+
+	fmt.Println("Marshalling saleAgreement bytes")
+	//property.PropId = propertyPrefix + property.propid
+
+	fmt.Println("Getting State on saleAgreement " + saleAgreement.AgreementNo)
+	cpRxBytes, err := stub.GetState(agreementPrefix + saleAgreement.AgreementNo)
+	if cpRxBytes == nil {
+		fmt.Println("AgreementNo does not exist, creating it")
+		cpBytes, err := json.Marshal(&saleAgreement)
+		if err != nil {
+			fmt.Println("Error marshalling saleAgreement")
+			return nil, errors.New("Error issuing saleAgreement")
+		}
+		err = stub.PutState(agreementPrefix + saleAgreement.AgreementNo, cpBytes)
+		if err != nil {
+			fmt.Println("Error issuing saleAgreement")
+			return nil, errors.New("Error issuing saleAgreement")
+		}
+
+		
+
+		// Update the paper keys by adding the new key
+		fmt.Println("Getting saleAgreement Keys")
+		keysBytes, err := stub.GetState("AgreementKeys")
+		if err != nil {
+			fmt.Println("Error retrieving AgreementKeys")
+			return nil, errors.New("Error retrieving AgreementKeys")
+		}
+		var keys []string
+		err = json.Unmarshal(keysBytes, &keys)
+		if err != nil {
+			fmt.Println("Error unmarshel AgreementKeys")
+			return nil, errors.New("Error unmarshalling AgreementKeys ")
+		}
+
+		fmt.Println("Appending the new key to AgreementKeys Keys")
+		foundKey := false
+		for _, key := range keys {
+			if key == agreementPrefix+saleAgreement.AgreementNo {
+				foundKey = true
+			}
+		}
+		if foundKey == false {
+			keys = append(keys, agreementPrefix+saleAgreement.AgreementNo)
+			keysBytesToWrite, err := json.Marshal(&keys)
+			if err != nil {
+				fmt.Println("Error marshalling AgreementKeys")
+				return nil, errors.New("Error marshalling the AgreementKeys")
+			}
+			fmt.Println("Put state on AgreementKeys")
+			err = stub.PutState("AgreementKeys", keysBytesToWrite)
+			if err != nil {
+				fmt.Println("Error writting AgreementKeys back")
+				return nil, errors.New("Error writing the AgreementKeys back")
+			}
+		}
+
+		fmt.Println("Issue commercial paper %+v\n", saleAgreement)
+		return nil, nil
+	} else {
+		fmt.Println("AgreementNo exists")
+
+		var saleAgreementrx SaleAgreement
+		fmt.Println("Unmarshalling saleAgreement " + saleAgreement.AgreementNo)
+		err = json.Unmarshal(cpRxBytes, &saleAgreementrx)
+		if err != nil {
+			fmt.Println("Error unmarshalling saleAgreement " + saleAgreement.AgreementNo)
+			return nil, errors.New("Error unmarshalling saleAgreement " + saleAgreement.AgreementNo)
+		}
+
+		//quoterx.Qty = quoterx.Qty + quote.Qty
+
+		
+
+
+		cpWriteBytes, err := json.Marshal(&saleAgreementrx)
+		if err != nil {
+			fmt.Println("Error marshalling saleAgreement")
+			return nil, errors.New("Error issuing saleAgreement")
+		}
+		err = stub.PutState(agreementPrefix+saleAgreement.AgreementNo, cpWriteBytes)
+		if err != nil {
+			fmt.Println("Error saleAgreement")
+			return nil, errors.New("Error issuing saleAgreement")
+		}
+
+		fmt.Println("Updated commercial paper %+v\n", saleAgreementrx)
+		return nil, nil
+	}
+}
+
+func GetAllAgreement(stub shim.ChaincodeStubInterface) ([]SaleAgreement, error) {
+
+	var allSaleAgreement []SaleAgreement
+
+	// Get list of all the keys
+	keysBytes, err := stub.GetState("AgreementKeys")
+	if err != nil {
+		fmt.Println("Error retrieving SaleAgreement Keys ")
+		return nil, errors.New("Error retrieving SaleAgreement Keys")
+	}
+	var keys []string
+	err = json.Unmarshal(keysBytes, &keys)
+	if err != nil {
+		fmt.Println("Error unmarshalling SaleAgreement keys")
+		return nil, errors.New("Error unmarshalling SaleAgreement keys")
+	}
+
+	// Get all the cps
+	for _, value := range keys {
+		cpBytes, err := stub.GetState(value)
+
+		var saleAgreement SaleAgreement
+		err = json.Unmarshal(cpBytes, &saleAgreement)
+		if err != nil {
+			fmt.Println("Error retrieving saleAgreement " + value)
+			return nil, errors.New("Error retrieving saleAgreement " + value)
+		}
+
+		fmt.Println("Appending saleAgreement" + value)
+		allSaleAgreement = append(allSaleAgreement, saleAgreement)
+	}
+
+	return allSaleAgreement, nil
+}
+
+
+//Deeds
+
+
+func (t *SimpleChaincode) issueSaleDeeds(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
+
+	
+	//need one arg
+	if len(args) != 1 {
+		fmt.Println("error invalid arguments")
+		return nil, errors.New("Incorrect number of arguments. Expecting Quotation record")
+	}
+
+	var saleDeed SaleDeed
+	var err error
+	//var account Account
+
+	fmt.Println("Unmarshalling Property")
+	err = json.Unmarshal([]byte(args[0]), &saleDeed)
+	if err != nil {
+		fmt.Println("error invalid saleDeed issue" + args[0])
+		return nil, errors.New("Invalid saleDeed issue" + args[0])
+	}
+
+	
+
+	fmt.Println("Marshalling saleDeed bytes")
+	//property.PropId = propertyPrefix + property.propid
+
+	fmt.Println("Getting State on saleDeed " + saleDeed.DeedNo)
+	cpRxBytes, err := stub.GetState(deedPrefix + saleDeed.DeedNo)
+	if cpRxBytes == nil {
+		fmt.Println("DeedNo does not exist, creating it")
+		cpBytes, err := json.Marshal(&saleDeed)
+		if err != nil {
+			fmt.Println("Error marshalling saleDeed")
+			return nil, errors.New("Error issuing saleDeed")
+		}
+		err = stub.PutState(deedPrefix + saleDeed.DeedNo, cpBytes)
+		if err != nil {
+			fmt.Println("Error issuing saleDeed")
+			return nil, errors.New("Error issuing saleDeed")
+		}
+
+		
+
+		// Update the paper keys by adding the new key
+		fmt.Println("Getting saleDeed Keys")
+		keysBytes, err := stub.GetState("DeedKeys")
+		if err != nil {
+			fmt.Println("Error retrieving DeedKeys")
+			return nil, errors.New("Error retrieving DeedKeys")
+		}
+		var keys []string
+		err = json.Unmarshal(keysBytes, &keys)
+		if err != nil {
+			fmt.Println("Error unmarshel DeedKeys")
+			return nil, errors.New("Error unmarshalling DeedKeys ")
+		}
+
+		fmt.Println("Appending the new key to DeedKeys Keys")
+		foundKey := false
+		for _, key := range keys {
+			if key == deedPrefix+saleDeed.DeedNo {
+				foundKey = true
+			}
+		}
+		if foundKey == false {
+			keys = append(keys, deedPrefix+saleDeed.DeedNo)
+			keysBytesToWrite, err := json.Marshal(&keys)
+			if err != nil {
+				fmt.Println("Error marshalling DeedKeys")
+				return nil, errors.New("Error marshalling the DeedKeys")
+			}
+			fmt.Println("Put state on DeedKeys")
+			err = stub.PutState("DeedKeys", keysBytesToWrite)
+			if err != nil {
+				fmt.Println("Error writting DeedKeys back")
+				return nil, errors.New("Error writing the DeedKeys back")
+			}
+		}
+
+		fmt.Println("Issue commercial paper %+v\n", saleDeed)
+		return nil, nil
+	} else {
+		fmt.Println("DeedNo exists")
+
+		var saleDeedrx SaleDeed
+		fmt.Println("Unmarshalling saleDeed " + saleDeed.DeedNo)
+		err = json.Unmarshal(cpRxBytes, &saleDeedrx)
+		if err != nil {
+			fmt.Println("Error unmarshalling saleDeed " + saleDeed.DeedNo)
+			return nil, errors.New("Error unmarshalling saleDeed " + saleDeed.DeedNo)
+		}
+
+		//quoterx.Qty = quoterx.Qty + quote.Qty
+
+		
+
+
+		cpWriteBytes, err := json.Marshal(&saleDeedrx)
+		if err != nil {
+			fmt.Println("Error marshalling saleDeed")
+			return nil, errors.New("Error issuing saleDeed")
+		}
+		err = stub.PutState(deedPrefix+saleDeed.DeedNo, cpWriteBytes)
+		if err != nil {
+			fmt.Println("Error saleDeed")
+			return nil, errors.New("Error issuing saleDeed")
+		}
+
+		fmt.Println("Updated commercial paper %+v\n", saleDeedrx)
+		return nil, nil
+	}
+}
+
+func GetAllDeed(stub shim.ChaincodeStubInterface) ([]SaleDeed, error) {
+
+	var allsaleDeed []SaleDeed
+
+	// Get list of all the keys
+	keysBytes, err := stub.GetState("DeedKeys")
+	if err != nil {
+		fmt.Println("Error retrieving saleDeed Keys ")
+		return nil, errors.New("Error retrieving saleDeed Keys")
+	}
+	var keys []string
+	err = json.Unmarshal(keysBytes, &keys)
+	if err != nil {
+		fmt.Println("Error unmarshalling saleDeed keys")
+		return nil, errors.New("Error unmarshalling saleDeed keys")
+	}
+
+	// Get all the cps
+	for _, value := range keys {
+		cpBytes, err := stub.GetState(value)
+
+		var saleDeed SaleDeed
+		err = json.Unmarshal(cpBytes, &saleDeed)
+		if err != nil {
+			fmt.Println("Error retrieving saleDeed " + value)
+			return nil, errors.New("Error retrieving saleDeed " + value)
+		}
+
+		fmt.Println("Appending saleDeed" + value)
+		allsaleDeed = append(allsaleDeed, saleDeed)
+	}
+
+	return allsaleDeed, nil
+}
+
+
+
+
+
+
+
 
 
 /* Added by Narayanan L for Land Record Management*/
@@ -1039,6 +1429,36 @@ func (t *SimpleChaincode) Query(stub shim.ChaincodeStubInterface, function strin
 			}
 			fmt.Println("All success, returning allcps")
 			return allPropertiesBytes, nil
+		}
+	} else if args[0] == "GetAllAgreement" {
+		fmt.Println("Getting all Agreement")
+		allSaleAgreement, err := GetAllAgreement(stub)
+		if err != nil {
+			fmt.Println("Error from GetAllAgreement")
+			return nil, err
+		} else {
+			allSaleAgreementBytes, err1 := json.Marshal(&allSaleAgreement)
+			if err1 != nil {
+				fmt.Println("Error marshalling allSaleAgreement")
+				return nil, err1
+			}
+			fmt.Println("All success, returning allSaleAgreement")
+			return allSaleAgreementBytes, nil
+		}
+	} else if args[0] == "GetAllDeed" {
+		fmt.Println("Getting all Deed")
+		allSaleDeed, err := GetAllDeed(stub)
+		if err != nil {
+			fmt.Println("Error from GetAllDeed")
+			return nil, err
+		} else {
+			allSaleDeedBytes, err1 := json.Marshal(&allSaleDeed)
+			if err1 != nil {
+				fmt.Println("Error marshalling allSaleDeed")
+				return nil, err1
+			}
+			fmt.Println("All success, returning allSaleDeed")
+			return allSaleDeedBytes, nil
 		}
 	} else {
 		fmt.Println("Generic Query call")
