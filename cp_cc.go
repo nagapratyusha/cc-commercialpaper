@@ -79,7 +79,7 @@ type Owner struct {
 
 
 type Quote struct {
-	CUSIP     string  `json:"cusip"`
+	QuoteNo     string  `json:"quoteno"`
 	Item    string  `json:"item"`
 	Qty    string  `json:"qty"`
 	ShipTerm    string  `json:"shipterm"`
@@ -283,25 +283,25 @@ func (t *SimpleChaincode) issueQuote(stub shim.ChaincodeStubInterface, args []st
 
 	// cp.Owners = append(cp.Owners, owner)
 
-	suffix, err := generateCUSIPSuffix(quote.IssueDate, 10000)
-	if err != nil {
-		fmt.Println("Error generating cusip")
-		return nil, errors.New("Error generating CUSIP")
-	}
+	// suffix, err := generateCUSIPSuffix(quote.IssueDate, 10000)
+	// if err != nil {
+	// 	fmt.Println("Error generating cusip")
+	// 	return nil, errors.New("Error generating CUSIP")
+	// }
 
 	fmt.Println("Marshalling Quote bytes")
-	quote.CUSIP = account.Prefix + suffix
+	quote.QuoteNo = account.Prefix + quote.QuoteNo
 
-	fmt.Println("Getting State on CP " + quote.CUSIP)
-	cpRxBytes, err := stub.GetState(quotePrefix + quote.CUSIP)
+	fmt.Println("Getting State on CP " + quote.QuoteNo)
+	cpRxBytes, err := stub.GetState(quotePrefix + quote.QuoteNo)
 	if cpRxBytes == nil {
-		fmt.Println("CUSIP does not exist, creating it")
+		fmt.Println("QuoteNo does not exist, creating it")
 		cpBytes, err := json.Marshal(&quote)
 		if err != nil {
 			fmt.Println("Error marshalling quote")
 			return nil, errors.New("Error issuing quote")
 		}
-		err = stub.PutState(quotePrefix+quote.CUSIP, cpBytes)
+		err = stub.PutState(quotePrefix+quote.QuoteNo, cpBytes)
 		if err != nil {
 			fmt.Println("Error issuing paper")
 			return nil, errors.New("Error issuing quote")
@@ -336,12 +336,12 @@ func (t *SimpleChaincode) issueQuote(stub shim.ChaincodeStubInterface, args []st
 		fmt.Println("Appending the new key to Paper Keys")
 		foundKey := false
 		for _, key := range keys {
-			if key == quotePrefix+quote.CUSIP {
+			if key == quotePrefix+quote.QuoteNo {
 				foundKey = true
 			}
 		}
 		if foundKey == false {
-			keys = append(keys, quotePrefix+quote.CUSIP)
+			keys = append(keys, quotePrefix+quote.QuoteNo)
 			keysBytesToWrite, err := json.Marshal(&keys)
 			if err != nil {
 				fmt.Println("Error marshalling keys")
@@ -358,14 +358,14 @@ func (t *SimpleChaincode) issueQuote(stub shim.ChaincodeStubInterface, args []st
 		fmt.Println("Issue commercial paper %+v\n", quote)
 		return nil, nil
 	} else {
-		fmt.Println("CUSIP exists")
+		fmt.Println("QuoteNo exists")
 
 		var quoterx Quote
-		fmt.Println("Unmarshalling CP " + quote.CUSIP)
+		fmt.Println("Unmarshalling CP " + quote.QuoteNo)
 		err = json.Unmarshal(cpRxBytes, &quoterx)
 		if err != nil {
-			fmt.Println("Error unmarshalling cp " + quote.CUSIP)
-			return nil, errors.New("Error unmarshalling cp " + quote.CUSIP)
+			fmt.Println("Error unmarshalling cp " + quote.QuoteNo)
+			return nil, errors.New("Error unmarshalling cp " + quote.QuoteNo)
 		}
 
 		quoterx.Qty = quoterx.Qty + quote.Qty
@@ -382,7 +382,7 @@ func (t *SimpleChaincode) issueQuote(stub shim.ChaincodeStubInterface, args []st
 			fmt.Println("Error marshalling cp")
 			return nil, errors.New("Error issuing commercial paper")
 		}
-		err = stub.PutState(quotePrefix+quote.CUSIP, cpWriteBytes)
+		err = stub.PutState(quotePrefix+quote.QuoteNo, cpWriteBytes)
 		if err != nil {
 			fmt.Println("Error issuing paper")
 			return nil, errors.New("Error issuing commercial paper")
