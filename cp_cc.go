@@ -34,6 +34,7 @@ var propertyPrefix = "pt:"
 var proposalPrefix = "pr:"
 var agreementPrefix = "ag:"
 var deedPrefix = "de:"
+var notificationPrefix = "de:"
 
 
 var cpPrefix = "cp:"
@@ -83,6 +84,20 @@ type Owner struct {
 }
 
 
+type Notification struct {
+	NotificationId string `json:"notificationId"`
+	Parameter1  string  `json:"parameter1"`
+	Parameter2  string  `json:"parameter2"`
+	Parameter3  string  `json:"parameter3"`
+	Parameter4  string  `json:"parameter4"`
+	Parameter5  string  `json:"parameter5"`
+	Parameter6  string  `json:"parameter6"`
+	Parameter7  string  `json:"parameter7"`
+	Parameter8  string  `json:"parameter8"`
+	Parameter9  string  `json:"parameter9"`
+	Parameter10  string  `json:"parameter10"`
+	
+}
 
 type Quote struct {
 	QuoteNo     string  `json:"quoteno"`
@@ -238,6 +253,7 @@ func (t *SimpleChaincode) Init(stub shim.ChaincodeStubInterface, function string
 	var blank2 []string
 	var blank3 []string
 	var blank4 []string
+	var blank5 []string
 
 	blankBytes, _ := json.Marshal(&blank)
 	err := stub.PutState("PaperKeys", blankBytes)
@@ -266,6 +282,12 @@ func (t *SimpleChaincode) Init(stub shim.ChaincodeStubInterface, function string
 	blankBytes4, _ := json.Marshal(&blank4)
 	err4 := stub.PutState("DeedKeys", blankBytes4)
 	if err4 != nil {
+		fmt.Println("Failed to initialize paper key collection")
+	}
+
+	blankBytes5, _ := json.Marshal(&blank5)
+	err5 := stub.PutState("NotificationKeys", blankBytes5)
+	if err5 != nil {
 		fmt.Println("Failed to initialize paper key collection")
 	}
 
@@ -495,6 +517,155 @@ func (t *SimpleChaincode) issueQuote(stub shim.ChaincodeStubInterface, args []st
 
 /* Added by Narayanan L for Land Record Management*/
 
+//Notification
+
+func (t *SimpleChaincode) addNotification(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
+
+	
+	//need one arg
+	if len(args) != 1 {
+		fmt.Println("error invalid arguments")
+		return nil, errors.New("Incorrect number of arguments. Expecting Quotation record")
+	}
+
+	var notification Notification
+	var err error
+	//var account Account
+
+	fmt.Println("Unmarshalling notification")
+	err = json.Unmarshal([]byte(args[0]), &notification)
+	if err != nil {
+		fmt.Println("error invalid notification issue" + args[0])
+		return nil, errors.New("Invalid notification issue" + args[0])
+	}
+
+	
+
+	fmt.Println("Marshalling notification bytes")
+	//notification.PropId = notificationPrefix + notification.NotificationId
+
+	fmt.Println("Getting State on notification " + notification.NotificationId)
+	cpRxBytes, err := stub.GetState(notificationPrefix + notification.NotificationId)
+	if cpRxBytes == nil {
+		fmt.Println("PropId does not exist, creating it")
+		cpBytes, err := json.Marshal(&notification)
+		if err != nil {
+			fmt.Println("Error marshalling notification")
+			return nil, errors.New("Error issuing notification")
+		}
+		err = stub.PutState(notificationPrefix+notification.NotificationId, cpBytes)
+		if err != nil {
+			fmt.Println("Error issuing paper")
+			return nil, errors.New("Error issuing notification")
+		}
+
+		
+
+		// Update the paper keys by adding the new key
+		fmt.Println("Getting Paper Keys")
+		keysBytes, err := stub.GetState("NotificationKeys")
+		if err != nil {
+			fmt.Println("Error retrieving paper keys")
+			return nil, errors.New("Error retrieving paper keys")
+		}
+		var keys []string
+		err = json.Unmarshal(keysBytes, &keys)
+		if err != nil {
+			fmt.Println("Error unmarshel keys")
+			return nil, errors.New("Error unmarshalling paper keys ")
+		}
+
+		fmt.Println("Appending the new key to Paper Keys")
+		foundKey := false
+		for _, key := range keys {
+			if key == notificationPrefix+notification.NotificationId {
+				foundKey = true
+			}
+		}
+		if foundKey == false {
+			keys = append(keys, notificationPrefix+notification.NotificationId)
+			keysBytesToWrite, err := json.Marshal(&keys)
+			if err != nil {
+				fmt.Println("Error marshalling keys")
+				return nil, errors.New("Error marshalling the keys")
+			}
+			fmt.Println("Put state on NotificationKeys")
+			err = stub.PutState("NotificationKeys", keysBytesToWrite)
+			if err != nil {
+				fmt.Println("Error writting keys back")
+				return nil, errors.New("Error writing the keys back")
+			}
+		}
+
+		fmt.Println("Issue commercial paper %+v\n", notification)
+		return nil, nil
+	} else {
+		fmt.Println("QuoteNo exists")
+
+		var notificationrx Notification
+		fmt.Println("Unmarshalling CP " + notification.NotificationId)
+		err = json.Unmarshal(cpRxBytes, &notificationrx)
+		if err != nil {
+			fmt.Println("Error unmarshalling cp " + notification.NotificationId)
+			return nil, errors.New("Error unmarshalling cp " + notification.NotificationId)
+		}
+
+		//quoterx.Qty = quoterx.Qty + quote.Qty
+
+		notificationrx = notification
+
+		cpWriteBytes, err := json.Marshal(&notificationrx)
+		if err != nil {
+			fmt.Println("Error marshalling cp")
+			return nil, errors.New("Error issuing commercial paper")
+		}
+		err = stub.PutState(notificationPrefix+notification.NotificationId, cpWriteBytes)
+		if err != nil {
+			fmt.Println("Error issuing paper")
+			return nil, errors.New("Error issuing commercial paper")
+		}
+
+		fmt.Println("Updated commercial paper %+v\n", notificationrx)
+		return nil, nil
+	}
+}
+
+func GetAllNotifications(stub shim.ChaincodeStubInterface) ([]Notification, error) {
+
+	var allNotification []Notification
+
+	// Get list of all the keys
+	keysBytes, err := stub.GetState("NotificationKeys")
+	if err != nil {
+		fmt.Println("Error retrieving Notification keys")
+		return nil, errors.New("Error retrieving Notification keys")
+	}
+	var keys []string
+	err = json.Unmarshal(keysBytes, &keys)
+	if err != nil {
+		fmt.Println("Error unmarshalling Notification keys")
+		return nil, errors.New("Error unmarshalling Notification keys")
+	}
+
+	// Get all the cps
+	for _, value := range keys {
+		cpBytes, err := stub.GetState(value)
+
+		var notification Notification
+		err = json.Unmarshal(cpBytes, &notification)
+		if err != nil {
+			fmt.Println("Error retrieving cp " + value)
+			return nil, errors.New("Error retrieving cp " + value)
+		}
+
+		fmt.Println("Appending CP" + value)
+		allNotification = append(allNotification, notification)
+	}
+
+	return allNotification, nil
+}
+
+//property
 
 func (t *SimpleChaincode) addProperty(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
 
@@ -1648,6 +1819,21 @@ func (t *SimpleChaincode) Query(stub shim.ChaincodeStubInterface, function strin
 			fmt.Println("All success, returning allSaleDeed")
 			return allSaleDeedBytes, nil
 		}
+	} else if args[0] == "GetAllNotifications" {
+		fmt.Println("Getting all Notification")
+		allNotification, err := GetAllNotifications(stub)
+		if err != nil {
+			fmt.Println("Error from GetAllNotifications")
+			return nil, err
+		} else {
+			allNotificationBytes, err1 := json.Marshal(&allNotification)
+			if err1 != nil {
+				fmt.Println("Error marshalling allNotification")
+				return nil, err1
+			}
+			fmt.Println("All success, returning allNotification")
+			return allNotificationBytes, nil
+		}
 	} else {
 		fmt.Println("Generic Query call")
 		bytes, err := stub.GetState(args[0])
@@ -1696,6 +1882,9 @@ func (t *SimpleChaincode) Invoke(stub shim.ChaincodeStubInterface, function stri
 	} else if function == "issueSaleDeeds" { //Added for Trade finance 
 		fmt.Println("Firing issueSaleDeeds")
 		return t.issueSaleDeeds(stub, args)
+	} else if function == "addNotification" { //Added for Trade finance 
+		fmt.Println("Firing addNotification")
+		return t.addNotification(stub, args)
 	}
 
 
