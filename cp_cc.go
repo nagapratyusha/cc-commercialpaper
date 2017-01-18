@@ -717,7 +717,7 @@ func (t *SimpleChaincode) issueProposal(stub shim.ChaincodeStubInterface, args [
 				return nil, errors.New("Error marshalling the proposalNo")
 			}
 			fmt.Println("Put state on proposalNo")
-			err = stub.PutState("proposalNo", keysBytesToWrite)
+			err = stub.PutState("ProposalKeys", keysBytesToWrite)
 			if err != nil {
 				fmt.Println("Error writting proposalNo back")
 				return nil, errors.New("Error writing the proposalNo back")
