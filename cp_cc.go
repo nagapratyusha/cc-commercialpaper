@@ -399,19 +399,19 @@ func (t *SimpleChaincode) addProperty(stub shim.ChaincodeStubInterface, args []s
 	var err error
 	//var account Account
 
-	fmt.Println("Unmarshalling Quote")
+	fmt.Println("Unmarshalling Property")
 	err = json.Unmarshal([]byte(args[0]), &property)
 	if err != nil {
-		fmt.Println("error invalid Quote issue")
-		return nil, errors.New("Invalid Quote issue")
+		fmt.Println("error invalid Property issue" + args[0])
+		return nil, errors.New("Invalid Property issue" + args[0])
 	}
 
 	
 
-	fmt.Println("Marshalling Quote bytes")
+	fmt.Println("Marshalling Property bytes")
 	//property.PropId = propertyPrefix + property.propid
 
-	fmt.Println("Getting State on CP " + property.PropId)
+	fmt.Println("Getting State on Property " + property.PropId)
 	cpRxBytes, err := stub.GetState(propertyPrefix + property.PropId)
 	if cpRxBytes == nil {
 		fmt.Println("PropId does not exist, creating it")
