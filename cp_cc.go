@@ -262,19 +262,19 @@ func (t *SimpleChaincode) issueQuote(stub shim.ChaincodeStubInterface, args []st
 
 	//generate the CUSIP
 	//get account prefix
-	fmt.Println("Getting state of - " + accountPrefix + quote.Issuer)
-	accountBytes, err := stub.GetState(accountPrefix + quote.Issuer)
-	if err != nil {
-		fmt.Println("Error Getting state of - " + accountPrefix + quote.Issuer)
-		return nil, errors.New("Error retrieving account " + quote.Issuer)
-	}
-	err = json.Unmarshal(accountBytes, &account)
-	if err != nil {
-		fmt.Println("Error Unmarshalling accountBytes")
-		return nil, errors.New("Error retrieving account " + quote.Issuer)
-	}
+	// fmt.Println("Getting state of - " + accountPrefix + quote.Issuer)
+	// accountBytes, err := stub.GetState(accountPrefix + quote.Issuer)
+	// if err != nil {
+	// 	fmt.Println("Error Getting state of - " + accountPrefix + quote.Issuer)
+	// 	return nil, errors.New("Error retrieving account " + quote.Issuer)
+	// }
+	// err = json.Unmarshal(accountBytes, &account)
+	// if err != nil {
+	// 	fmt.Println("Error Unmarshalling accountBytes")
+	// 	return nil, errors.New("Error retrieving account " + quote.Issuer)
+	// }
 
-	account.AssetsIds = append(account.AssetsIds, quote.CUSIP)
+	// account.AssetsIds = append(account.AssetsIds, quote.CUSIP)
 
 	// Set the issuer to be the owner of all quantity
 	// var owner Owner
