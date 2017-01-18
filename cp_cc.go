@@ -99,7 +99,7 @@ type Quote struct {
 
 type Property struct {
 	PropId     string  `json:"propid"`
-	Owner    string  `json:"owner"`
+	PropOwner    string  `json:"owner"`
 	Tax    string  `json:"tax"`
 	PropType    string  `json:"proptype"`
 	Measure    string  `json:"mesaure"`
@@ -113,7 +113,7 @@ type Property struct {
 }
 
 type History struct {
-	Owner     string  `json:"owner"`
+	HistoryOwner     string  `json:"owner"`
 	Location    string  `json:"location"`
 	from       string `json:"from"`
 	to       string     `json:"to"`
