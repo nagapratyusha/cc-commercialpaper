@@ -30,6 +30,9 @@ import (
 )
 
 var quotePrefix = "qt:"
+var propertyPrefix = "pt:"
+
+
 var cpPrefix = "cp:"
 var accountPrefix = "acct:"
 var accountsKey = "accounts"
@@ -93,6 +96,32 @@ type Quote struct {
 	Country    string  `json:"country"`
 }
 
+
+type Property struct {
+	PropId     string  `json:"propid"`
+	Owner    string  `json:"owner"`
+	Tax    string  `json:"tax"`
+	PropType    string  `json:"proptype"`
+	Measure    string  `json:"mesaure"`
+	MesaureDisp    string  `json:"mesauredisp"`
+	Address    string  `json:"address"`
+	Location    string  `json:"location"`
+	Latitude string  `json:"latitude"`
+	Longitude    string  `json:"longitude"`
+	History    []History `json:"history"`  
+	Litigations  []Litigation  `json:"litigations"`
+}
+
+type History struct {
+	Owner     string  `json:"owner"`
+	Location    string  `json:"location"`
+	from       string `json:"from"`
+	to       string     `json:"to"`
+}
+
+type Litigation struct {
+	data     string  `json:"data"`
+}
 
 type CP struct {
 	CUSIP     string  `json:"cusip"`
@@ -260,34 +289,7 @@ func (t *SimpleChaincode) issueQuote(stub shim.ChaincodeStubInterface, args []st
 		return nil, errors.New("Invalid Quote issue")
 	}
 
-	//generate the CUSIP
-	//get account prefix
-	// fmt.Println("Getting state of - " + accountPrefix + quote.Issuer)
-	// accountBytes, err := stub.GetState(accountPrefix + quote.Issuer)
-	// if err != nil {
-	// 	fmt.Println("Error Getting state of - " + accountPrefix + quote.Issuer)
-	// 	return nil, errors.New("Error retrieving account " + quote.Issuer)
-	// }
-	// err = json.Unmarshal(accountBytes, &account)
-	// if err != nil {
-	// 	fmt.Println("Error Unmarshalling accountBytes")
-	// 	return nil, errors.New("Error retrieving account " + quote.Issuer)
-	// }
-
-	// account.AssetsIds = append(account.AssetsIds, quote.CUSIP)
-
-	// Set the issuer to be the owner of all quantity
-	// var owner Owner
-	// owner.Company = cp.Issuer
-	// owner.Quantity = cp.Qty
-
-	// cp.Owners = append(cp.Owners, owner)
-
-	// suffix, err := generateCUSIPSuffix(quote.IssueDate, 10000)
-	// if err != nil {
-	// 	fmt.Println("Error generating cusip")
-	// 	return nil, errors.New("Error generating CUSIP")
-	// }
+	
 
 	fmt.Println("Marshalling Quote bytes")
 	quote.QuoteNo = account.Prefix + quote.QuoteNo
@@ -307,17 +309,7 @@ func (t *SimpleChaincode) issueQuote(stub shim.ChaincodeStubInterface, args []st
 			return nil, errors.New("Error issuing quote")
 		}
 
-		// fmt.Println("Marshalling account bytes to write")
-		// accountBytesToWrite, err := json.Marshal(&account)
-		// if err != nil {
-		// 	fmt.Println("Error marshalling account")
-		// 	return nil, errors.New("Error issuing commercial paper")
-		// }
-		// err = stub.PutState(accountPrefix+cp.Issuer, accountBytesToWrite)
-		// if err != nil {
-		// 	fmt.Println("Error putting state on accountBytesToWrite")
-		// 	return nil, errors.New("Error issuing commercial paper")
-		// }
+		
 
 		// Update the paper keys by adding the new key
 		fmt.Println("Getting Paper Keys")
@@ -370,12 +362,8 @@ func (t *SimpleChaincode) issueQuote(stub shim.ChaincodeStubInterface, args []st
 
 		quoterx.Qty = quoterx.Qty + quote.Qty
 
-		// for key, val := range quoterx.Owners {
-		// 	if val.Company == quote.Issuer {
-		// 		quoterx.Owners[key].Quantity += quote.Qty
-		// 		break
-		// 	}
-		// }
+		
+
 
 		cpWriteBytes, err := json.Marshal(&quoterx)
 		if err != nil {
@@ -395,6 +383,158 @@ func (t *SimpleChaincode) issueQuote(stub shim.ChaincodeStubInterface, args []st
 
 
 
+/* Added by Narayanan L for Land Record Management*/
+
+
+func (t *SimpleChaincode) addProperty(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
+
+	
+	//need one arg
+	if len(args) != 1 {
+		fmt.Println("error invalid arguments")
+		return nil, errors.New("Incorrect number of arguments. Expecting Quotation record")
+	}
+
+	var property Property
+	var err error
+	//var account Account
+
+	fmt.Println("Unmarshalling Quote")
+	err = json.Unmarshal([]byte(args[0]), &property)
+	if err != nil {
+		fmt.Println("error invalid Quote issue")
+		return nil, errors.New("Invalid Quote issue")
+	}
+
+	
+
+	fmt.Println("Marshalling Quote bytes")
+	//property.PropId = propertyPrefix + property.propid
+
+	fmt.Println("Getting State on CP " + property.PropId)
+	cpRxBytes, err := stub.GetState(propertyPrefix + property.PropId)
+	if cpRxBytes == nil {
+		fmt.Println("PropId does not exist, creating it")
+		cpBytes, err := json.Marshal(&property)
+		if err != nil {
+			fmt.Println("Error marshalling property")
+			return nil, errors.New("Error issuing property")
+		}
+		err = stub.PutState(propertyPrefix+property.PropId, cpBytes)
+		if err != nil {
+			fmt.Println("Error issuing paper")
+			return nil, errors.New("Error issuing property")
+		}
+
+		
+
+		// Update the paper keys by adding the new key
+		fmt.Println("Getting Paper Keys")
+		keysBytes, err := stub.GetState("PropertyKeys")
+		if err != nil {
+			fmt.Println("Error retrieving paper keys")
+			return nil, errors.New("Error retrieving paper keys")
+		}
+		var keys []string
+		err = json.Unmarshal(keysBytes, &keys)
+		if err != nil {
+			fmt.Println("Error unmarshel keys")
+			return nil, errors.New("Error unmarshalling paper keys ")
+		}
+
+		fmt.Println("Appending the new key to Paper Keys")
+		foundKey := false
+		for _, key := range keys {
+			if key == propertyPrefix+property.PropId {
+				foundKey = true
+			}
+		}
+		if foundKey == false {
+			keys = append(keys, propertyPrefix+property.PropId)
+			keysBytesToWrite, err := json.Marshal(&keys)
+			if err != nil {
+				fmt.Println("Error marshalling keys")
+				return nil, errors.New("Error marshalling the keys")
+			}
+			fmt.Println("Put state on PropertyKeys")
+			err = stub.PutState("PropertyKeys", keysBytesToWrite)
+			if err != nil {
+				fmt.Println("Error writting keys back")
+				return nil, errors.New("Error writing the keys back")
+			}
+		}
+
+		fmt.Println("Issue commercial paper %+v\n", property)
+		return nil, nil
+	} else {
+		fmt.Println("QuoteNo exists")
+
+		var propertyrx Property
+		fmt.Println("Unmarshalling CP " + property.PropId)
+		err = json.Unmarshal(cpRxBytes, &propertyrx)
+		if err != nil {
+			fmt.Println("Error unmarshalling cp " + property.PropId)
+			return nil, errors.New("Error unmarshalling cp " + property.PropId)
+		}
+
+		//quoterx.Qty = quoterx.Qty + quote.Qty
+
+		
+
+
+		cpWriteBytes, err := json.Marshal(&propertyrx)
+		if err != nil {
+			fmt.Println("Error marshalling cp")
+			return nil, errors.New("Error issuing commercial paper")
+		}
+		err = stub.PutState(propertyPrefix+property.PropId, cpWriteBytes)
+		if err != nil {
+			fmt.Println("Error issuing paper")
+			return nil, errors.New("Error issuing commercial paper")
+		}
+
+		fmt.Println("Updated commercial paper %+v\n", propertyrx)
+		return nil, nil
+	}
+}
+
+func GetAllProperties(stub shim.ChaincodeStubInterface) ([]Property, error) {
+
+	var allProperties []Property
+
+	// Get list of all the keys
+	keysBytes, err := stub.GetState("PropertyKeys")
+	if err != nil {
+		fmt.Println("Error retrieving paper keys")
+		return nil, errors.New("Error retrieving paper keys")
+	}
+	var keys []string
+	err = json.Unmarshal(keysBytes, &keys)
+	if err != nil {
+		fmt.Println("Error unmarshalling paper keys")
+		return nil, errors.New("Error unmarshalling paper keys")
+	}
+
+	// Get all the cps
+	for _, value := range keys {
+		cpBytes, err := stub.GetState(value)
+
+		var property Property
+		err = json.Unmarshal(cpBytes, &property)
+		if err != nil {
+			fmt.Println("Error retrieving cp " + value)
+			return nil, errors.New("Error retrieving cp " + value)
+		}
+
+		fmt.Println("Appending CP" + value)
+		allProperties = append(allProperties, property)
+	}
+
+	return allProperties, nil
+}
+
+
+/* Added by Narayanan L for Land Record Management*/
 
 
 
@@ -878,6 +1018,21 @@ func (t *SimpleChaincode) Query(stub shim.ChaincodeStubInterface, function strin
 			fmt.Println("All success, returning the company")
 			return companyBytes, nil
 		}
+	} else if args[0] == "GetAllProperties" {
+		fmt.Println("Getting all CPs")
+		allProperties, err := GetAllProperties(stub)
+		if err != nil {
+			fmt.Println("Error from GetAllProperties")
+			return nil, err
+		} else {
+			allPropertiesBytes, err1 := json.Marshal(&allProperties)
+			if err1 != nil {
+				fmt.Println("Error marshalling allcps")
+				return nil, err1
+			}
+			fmt.Println("All success, returning allcps")
+			return allPropertiesBytes, nil
+		}
 	} else {
 		fmt.Println("Generic Query call")
 		bytes, err := stub.GetState(args[0])
@@ -914,6 +1069,9 @@ func (t *SimpleChaincode) Invoke(stub shim.ChaincodeStubInterface, function stri
 	} else if function == "issueQuote" { //Added for Trade finance 
 		fmt.Println("Firing issueQuote")
 		return t.issueQuote(stub, args)
+	} else if function == "addProperty" { //Added for Trade finance 
+		fmt.Println("Firing addProperty")
+		return t.addProperty(stub, args)
 	}
 
 
