@@ -31,6 +31,7 @@ import (
 
 var quotePrefix = "qt:"
 var propertyPrefix = "pt:"
+var proposalPrefix = "pr:"
 var agreementPrefix = "ag:"
 var deedPrefix = "de:"
 
@@ -112,7 +113,6 @@ type Property struct {
 	Longitude    string  `json:"longitude"`
 	Histories    []History `json:"history"`  
 	Litigations  []Litigation  `json:"litigations"`
-	Price    string  `json:"price"`
 	Parameter1 string  `json:"parameter1"`
 	Parameter2 string  `json:"parameter2"`
 	Parameter3 string  `json:"parameter3"`
@@ -121,9 +121,24 @@ type Property struct {
 	Parameter6 string  `json:"parameter6"`
 }
 
+type Proposal struct {
+	ProposalNo string  `json:"proposalNo"`
+	PropId     string  `json:"propid"`
+	ProposedBy    string  `json:"proposedby"`
+	ProposedPrice    string  `json:"proposedprice"`
+	ProposedDate    string  `json:"proposeddate"`
+	Parameter1 string  `json:"parameter1"`
+	Parameter2 string  `json:"parameter2"`
+	Parameter3 string  `json:"parameter3"`
+	Parameter4 string  `json:"parameter4"`
+	Parameter5 string  `json:"parameter5"`
+	Parameter6 string  `json:"parameter6"`
+}
+
+
 type SaleAgreement struct {
 	AgreementNo string  `json:"agreementno"`
-	Property Property `json:"property"`
+	PropId     string  `json:"propid"`
 	Parties []Party `json:"buyer"`
 	Loan Loan `json:"loan"`
 	Parameter1 string  `json:"parameter1"`
@@ -137,7 +152,7 @@ type SaleAgreement struct {
 
 type SaleDeed struct {
 	DeedNo string  `json:"deedno"`
-	SaleAgreement SaleAgreement `json:"saleagreement"`
+	AgreementNo string  `json:"agreementno"`
 	Registrar Registrar `json:"registrar"`
 	Settlement []Settlement `json:"settlement"`
 	SignedOn string  `json:"signedon"`
@@ -222,6 +237,7 @@ func (t *SimpleChaincode) Init(stub shim.ChaincodeStubInterface, function string
 	var blank1 []string
 	var blank2 []string
 	var blank3 []string
+	var blank4 []string
 
 	blankBytes, _ := json.Marshal(&blank)
 	err := stub.PutState("PaperKeys", blankBytes)
@@ -236,14 +252,20 @@ func (t *SimpleChaincode) Init(stub shim.ChaincodeStubInterface, function string
 	}
 
 	blankBytes2, _ := json.Marshal(&blank2)
-	err2 := stub.PutState("AgreementKeys", blankBytes2)
+	err2 := stub.PutState("PropsalKeys", blankBytes2)
 	if err2 != nil {
 		fmt.Println("Failed to initialize paper key collection")
 	}
 
 	blankBytes3, _ := json.Marshal(&blank3)
-	err3 := stub.PutState("DeedKeys", blankBytes3)
+	err3 := stub.PutState("AgreementKeys", blankBytes3)
 	if err3 != nil {
+		fmt.Println("Failed to initialize paper key collection")
+	}
+
+	blankBytes4, _ := json.Marshal(&blank4)
+	err4 := stub.PutState("DeedKeys", blankBytes4)
+	if err4 != nil {
 		fmt.Println("Failed to initialize paper key collection")
 	}
 
@@ -620,6 +642,156 @@ func GetAllProperties(stub shim.ChaincodeStubInterface) ([]Property, error) {
 	return allProperties, nil
 }
 
+
+//Proposal
+
+
+func (t *SimpleChaincode) issueProposal(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
+
+	
+	//need one arg
+	if len(args) != 1 {
+		fmt.Println("error invalid arguments")
+		return nil, errors.New("Incorrect number of arguments. Expecting Quotation record")
+	}
+
+	var proposal Proposal
+	var err error
+	//var account Account
+
+	fmt.Println("Unmarshalling Proposal")
+	err = json.Unmarshal([]byte(args[0]), &proposal)
+	if err != nil {
+		fmt.Println("error invalid proposal issue" + args[0])
+		return nil, errors.New("Invalid proposal issue" + args[0])
+	}
+
+	
+
+	fmt.Println("Marshalling proposal bytes")
+	//property.PropId = propertyPrefix + property.propid
+
+	fmt.Println("Getting State on proposal " + proposal.ProposalNo)
+	cpRxBytes, err := stub.GetState(proposalPrefix + proposal.ProposalNo)
+	if cpRxBytes == nil {
+		fmt.Println("proposalNo does not exist, creating it")
+		cpBytes, err := json.Marshal(&proposal)
+		if err != nil {
+			fmt.Println("Error marshalling proposal")
+			return nil, errors.New("Error issuing proposal")
+		}
+		err = stub.PutState(proposalPrefix + proposal.ProposalNo, cpBytes)
+		if err != nil {
+			fmt.Println("Error issuing proposal")
+			return nil, errors.New("Error issuing proposal")
+		}
+
+		
+
+		// Update the paper keys by adding the new key
+		fmt.Println("Getting proposal Keys")
+		keysBytes, err := stub.GetState("ProposalKeys")
+		if err != nil {
+			fmt.Println("Error retrieving proposalNo")
+			return nil, errors.New("Error retrieving proposalNo")
+		}
+		var keys []string
+		err = json.Unmarshal(keysBytes, &keys)
+		if err != nil {
+			fmt.Println("Error unmarshel proposalNo")
+			return nil, errors.New("Error unmarshalling proposalNo ")
+		}
+
+		fmt.Println("Appending the new key to proposalNo Keys")
+		foundKey := false
+		for _, key := range keys {
+			if key == proposalPrefix+proposal.ProposalNo {
+				foundKey = true
+			}
+		}
+		if foundKey == false {
+			keys = append(keys, proposalPrefix+proposal.ProposalNo)
+			keysBytesToWrite, err := json.Marshal(&keys)
+			if err != nil {
+				fmt.Println("Error marshalling proposalNo")
+				return nil, errors.New("Error marshalling the proposalNo")
+			}
+			fmt.Println("Put state on proposalNo")
+			err = stub.PutState("proposalNo", keysBytesToWrite)
+			if err != nil {
+				fmt.Println("Error writting proposalNo back")
+				return nil, errors.New("Error writing the proposalNo back")
+			}
+		}
+
+		fmt.Println("Issue commercial paper %+v\n", proposal)
+		return nil, nil
+	} else {
+		fmt.Println("proposalNo exists")
+
+		var proposalrx Proposal
+		fmt.Println("Unmarshalling proposal " + proposal.ProposalNo)
+		err = json.Unmarshal(cpRxBytes, &proposalrx)
+		if err != nil {
+			fmt.Println("Error unmarshalling proposal " + proposal.ProposalNo)
+			return nil, errors.New("Error unmarshalling proposal " + proposal.ProposalNo)
+		}
+
+		//quoterx.Qty = quoterx.Qty + quote.Qty
+
+		
+
+
+		cpWriteBytes, err := json.Marshal(&proposalrx)
+		if err != nil {
+			fmt.Println("Error marshalling proposal")
+			return nil, errors.New("Error issuing proposal")
+		}
+		err = stub.PutState(proposalPrefix+proposal.ProposalNo, cpWriteBytes)
+		if err != nil {
+			fmt.Println("Error proposal")
+			return nil, errors.New("Error issuing proposal")
+		}
+
+		fmt.Println("Updated commercial paper %+v\n", proposalrx)
+		return nil, nil
+	}
+}
+
+func GetAllproposal(stub shim.ChaincodeStubInterface) ([]Proposal, error) {
+
+	var allproposal []Proposal
+
+	// Get list of all the keys
+	keysBytes, err := stub.GetState("ProposalKeys")
+	if err != nil {
+		fmt.Println("Error retrieving proposal Keys ")
+		return nil, errors.New("Error retrieving proposal Keys")
+	}
+	var keys []string
+	err = json.Unmarshal(keysBytes, &keys)
+	if err != nil {
+		fmt.Println("Error unmarshalling proposal keys")
+		return nil, errors.New("Error unmarshalling proposal keys")
+	}
+
+	// Get all the cps
+	for _, value := range keys {
+		cpBytes, err := stub.GetState(value)
+
+		var proposal Proposal
+		err = json.Unmarshal(cpBytes, &proposal)
+		if err != nil {
+			fmt.Println("Error retrieving proposal " + value)
+			return nil, errors.New("Error retrieving proposal " + value)
+		}
+
+		fmt.Println("Appending proposal" + value)
+		allproposal = append(allproposal, proposal)
+	}
+
+	return allproposal, nil
+}
 
 
 //Agreement
@@ -1430,6 +1602,21 @@ func (t *SimpleChaincode) Query(stub shim.ChaincodeStubInterface, function strin
 			fmt.Println("All success, returning allcps")
 			return allPropertiesBytes, nil
 		}
+	} else if args[0] == "GetAllproposal" {
+		fmt.Println("Getting all Proposal")
+		allProposal, err := GetAllproposal(stub)
+		if err != nil {
+			fmt.Println("Error from GetAllproposal")
+			return nil, err
+		} else {
+			allProposalBytes, err1 := json.Marshal(&allProposal)
+			if err1 != nil {
+				fmt.Println("Error marshalling allProposal")
+				return nil, err1
+			}
+			fmt.Println("All success, returning allProposal")
+			return allProposalBytes, nil
+		}
 	} else if args[0] == "GetAllAgreement" {
 		fmt.Println("Getting all Agreement")
 		allSaleAgreement, err := GetAllAgreement(stub)
@@ -1499,6 +1686,15 @@ func (t *SimpleChaincode) Invoke(stub shim.ChaincodeStubInterface, function stri
 	} else if function == "addProperty" { //Added for Trade finance 
 		fmt.Println("Firing addProperty")
 		return t.addProperty(stub, args)
+	} else if function == "issueProposal" { //Added for Trade finance 
+		fmt.Println("Firing issueProposal")
+		return t.issueProposal(stub, args)
+	} else if function == "issueSaleAgreement" { //Added for Trade finance 
+		fmt.Println("Firing issueSaleAgreement")
+		return t.issueSaleAgreement(stub, args)
+	} else if function == "issueSaleDeeds" { //Added for Trade finance 
+		fmt.Println("Firing issueSaleDeeds")
+		return t.issueSaleDeeds(stub, args)
 	}
 
 
