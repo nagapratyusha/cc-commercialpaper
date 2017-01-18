@@ -154,9 +154,16 @@ func (t *SimpleChaincode) Init(stub shim.ChaincodeStubInterface, function string
 	// Initialize the collection of commercial paper keys
 	fmt.Println("Initializing paper keys collection")
 	var blank []string
+	var blank1 []string
 	blankBytes, _ := json.Marshal(&blank)
 	err := stub.PutState("PaperKeys", blankBytes)
 	if err != nil {
+		fmt.Println("Failed to initialize paper key collection")
+	}
+
+	blankBytes1, _ := json.Marshal(&blank1)
+	err1 := stub.PutState("PropertyKeys", blankBytes1)
+	if err1 != nil {
 		fmt.Println("Failed to initialize paper key collection")
 	}
 
@@ -313,7 +320,7 @@ func (t *SimpleChaincode) issueQuote(stub shim.ChaincodeStubInterface, args []st
 
 		// Update the paper keys by adding the new key
 		fmt.Println("Getting Paper Keys")
-		keysBytes, err := stub.GetState("PaperKeys")
+		keysBytes, err := stub.GetState("PropertyKeys")
 		if err != nil {
 			fmt.Println("Error retrieving paper keys")
 			return nil, errors.New("Error retrieving paper keys")
@@ -339,8 +346,8 @@ func (t *SimpleChaincode) issueQuote(stub shim.ChaincodeStubInterface, args []st
 				fmt.Println("Error marshalling keys")
 				return nil, errors.New("Error marshalling the keys")
 			}
-			fmt.Println("Put state on PaperKeys")
-			err = stub.PutState("PaperKeys", keysBytesToWrite)
+			fmt.Println("Put state on PropertyKeys")
+			err = stub.PutState("PropertyKeys", keysBytesToWrite)
 			if err != nil {
 				fmt.Println("Error writting keys back")
 				return nil, errors.New("Error writing the keys back")
