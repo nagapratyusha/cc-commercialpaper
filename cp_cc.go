@@ -108,8 +108,8 @@ type Property struct {
 	Location    string  `json:"location"`
 	Latitude string  `json:"latitude"`
 	Longitude    string  `json:"longitude"`
-	Histories    []History `json:"history"`  
-	Litigations  []Litigation  `json:"litigations"`
+	//Histories    []History `json:"history"`  
+	//Litigations  []Litigation  `json:"litigations"`
 }
 
 type History struct {
