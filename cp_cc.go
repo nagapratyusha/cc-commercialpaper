@@ -487,6 +487,7 @@ func (t *SimpleChaincode) issueQuote(stub shim.ChaincodeStubInterface, args []st
 
 		fmt.Println("Updated commercial paper %+v\n", quoterx)
 		return nil, nil
+		
 	}
 }
 
@@ -588,8 +589,7 @@ func (t *SimpleChaincode) addProperty(stub shim.ChaincodeStubInterface, args []s
 
 		//quoterx.Qty = quoterx.Qty + quote.Qty
 
-		
-
+		propertyrx = property
 
 		cpWriteBytes, err := json.Marshal(&propertyrx)
 		if err != nil {
@@ -739,7 +739,7 @@ func (t *SimpleChaincode) issueProposal(stub shim.ChaincodeStubInterface, args [
 
 		//quoterx.Qty = quoterx.Qty + quote.Qty
 
-		
+		proposalrx = proposal
 
 
 		cpWriteBytes, err := json.Marshal(&proposalrx)
@@ -890,6 +890,7 @@ func (t *SimpleChaincode) issueSaleAgreement(stub shim.ChaincodeStubInterface, a
 
 		//quoterx.Qty = quoterx.Qty + quote.Qty
 
+		saleAgreementrx = saleAgreement
 		
 
 
@@ -1041,7 +1042,7 @@ func (t *SimpleChaincode) issueSaleDeeds(stub shim.ChaincodeStubInterface, args 
 
 		//quoterx.Qty = quoterx.Qty + quote.Qty
 
-		
+		saleDeedrx = saleDeed
 
 
 		cpWriteBytes, err := json.Marshal(&saleDeedrx)
