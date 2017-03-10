@@ -112,6 +112,11 @@ type Quote struct {
 	ModifiedOn    string  `json:"modifiedon"`
 	RequesterOrg    string  `json:"requesterorg"`
 	Country    string  `json:"country"`
+	Parameter1 	string  `json:"parameter1"`
+	Parameter2  string   `json:"parameter2"`
+	Parameter3  string   `json:"parameter3"`
+	Parameter4  string   `json:"parameter4"`
+	Parameter5  string   `json:"parameter5"`
 }
 
 
@@ -254,6 +259,7 @@ func (t *SimpleChaincode) Init(stub shim.ChaincodeStubInterface, function string
 	var blank3 []string
 	var blank4 []string
 	var blank5 []string
+	var blank6 []string
 
 	blankBytes, _ := json.Marshal(&blank)
 	err := stub.PutState("PaperKeys", blankBytes)
@@ -290,6 +296,12 @@ func (t *SimpleChaincode) Init(stub shim.ChaincodeStubInterface, function string
 	if err5 != nil {
 		fmt.Println("Failed to initialize paper key collection")
 	}
+	blankBytes6, _ := json.Marshal(&blank6)
+	err6 := stub.PutState("QuoteKeys", blankBytes6)
+	if err6 != nil {
+		fmt.Println("Failed to initialize paper key collection")
+	}
+
 
 	fmt.Println("Initialization complete")
 	return nil, nil
@@ -398,7 +410,7 @@ func (t *SimpleChaincode) createAccount(stub shim.ChaincodeStubInterface, args [
 
 
 /* Added by Narayanan L for Trade Finance */
-
+//Quote
 
 func (t *SimpleChaincode) issueQuote(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
 
@@ -511,6 +523,40 @@ func (t *SimpleChaincode) issueQuote(stub shim.ChaincodeStubInterface, args []st
 		return nil, nil
 		
 	}
+}
+func GetAllquote(stub shim.ChaincodeStubInterface) ([]Quote, error) {
+
+	var allquote []Quote
+
+	// Get list of all the keys
+	keysBytes, err := stub.GetState("QuoteKeys")
+	if err != nil {
+		fmt.Println("Error retrieving quote Keys ")
+		return nil, errors.New("Error retrieving quote Keys")
+	}
+	var keys []string
+	err = json.Unmarshal(keysBytes, &keys)
+	if err != nil {
+		fmt.Println("Error unmarshalling quote keys")
+		return nil, errors.New("Error unmarshalling quote keys")
+	}
+
+	// Get all the cps
+	for _, value := range keys {
+		cpBytes, err := stub.GetState(value)
+
+		var quote Quote
+		err = json.Unmarshal(cpBytes, &quote)
+		if err != nil {
+			fmt.Println("Error retrieving quote " + value)
+			return nil, errors.New("Error retrieving quote " + value)
+		}
+
+		fmt.Println("Appending quote" + value)
+		allquote = append(allquote, quote)
+	}
+
+	return allquote, nil
 }
 
 
@@ -1789,7 +1835,22 @@ func (t *SimpleChaincode) Query(stub shim.ChaincodeStubInterface, function strin
 			fmt.Println("All success, returning allProposal")
 			return allProposalBytes, nil
 		}
-	} else if args[0] == "GetAllAgreement" {
+	} else if args[0] == "GetAllquote" {
+		fmt.Println("Getting all Quote")
+		allquote, err := GetAllquote(stub)
+		if err != nil {
+			fmt.Println("Error from GetAllquote")
+			return nil, err
+		} else {
+			allquoteBytes, err1 := json.Marshal(&allquote)
+			if err1 != nil {
+				fmt.Println("Error marshalling allquote")
+				return nil, err1
+			}
+			fmt.Println("All success, returning allquote")
+			return allquoteBytes, nil
+		}
+	}else if args[0] == "GetAllAgreement" {
 		fmt.Println("Getting all Agreement")
 		allSaleAgreement, err := GetAllAgreement(stub)
 		if err != nil {
