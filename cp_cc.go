@@ -524,7 +524,7 @@ func (t *SimpleChaincode) issueQuote(stub shim.ChaincodeStubInterface, args []st
 		
 	}
 }
-func GetAllquote(stub shim.ChaincodeStubInterface) ([]Quote, error) {
+func GetAllQuotes(stub shim.ChaincodeStubInterface) ([]Quote, error) {
 
 	var allquote []Quote
 
@@ -1835,11 +1835,11 @@ func (t *SimpleChaincode) Query(stub shim.ChaincodeStubInterface, function strin
 			fmt.Println("All success, returning allProposal")
 			return allProposalBytes, nil
 		}
-	} else if args[0] == "GetAllquote" {
+	} else if args[0] == "GetAllQuotes" {
 		fmt.Println("Getting all Quote")
-		allquote, err := GetAllquote(stub)
+		allquote, err := GetAllQuotes(stub)
 		if err != nil {
-			fmt.Println("Error from GetAllquote")
+			fmt.Println("Error from GetAllQuotes")
 			return nil, err
 		} else {
 			allquoteBytes, err1 := json.Marshal(&allquote)
