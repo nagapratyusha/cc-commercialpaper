@@ -528,6 +528,8 @@ func GetAllQuotes(stub shim.ChaincodeStubInterface) ([]Quote, error) {
 
 	var allquote []Quote
 
+	fmt.Println("retrieving quote Keys ")
+
 	// Get list of all the keys
 	keysBytes, err := stub.GetState("QuoteKeys")
 	if err != nil {
