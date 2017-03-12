@@ -35,6 +35,8 @@ var proposalPrefix = "pr:"
 var agreementPrefix = "ag:"
 var deedPrefix = "de:"
 var notificationPrefix = "de:"
+var purchase_ordersPrefix = "po:"
+var letter_creditPrefix = "LC:"
 
 
 var cpPrefix = "cp:"
@@ -119,6 +121,50 @@ type Quote struct {
 	Parameter5  string   `json:"parameter5"`
 }
 
+type Purchase_Order struct {
+	PONo           string    `json:"pONo"`
+	VendorName     string    `json:"vendorName"`
+	VendorAddress  string    `json:"vendorAddress"`
+	VendorID       string    `json:"vendorID"`
+	VendorPhone    string    `json:"vendorPhone"`
+	VendorEmail    string    `json:"vendorEmail"`
+	ShipName       string    `json:"shipName"`
+	ShipAddress    string    `json:"shipAddress"`
+	ShipID         string    `json:"shipID"`
+	ShipPhone      string    `json:"shipPhone"`
+	ShipEmail      string    `json:"shipEmail"`
+	ShipMethod     string    `json:"shipMethod"`
+	ShipTerm       string    `json:"shipTerm"`
+	DeliveryDate   string    `json:"deliveryDate"`
+	SubTotal       string    `json:"subTotal"`
+	SalesTax       string    `json:"salesTax"`
+	Total          string    `json:"total"`
+	Status         string    `json:"status"`
+	ItemDetails []ItemDetail `json:"itemDetails"`
+	Parameter1     string    `json:"parameter1"`
+	Parameter2     string    `json:"parameter2"`
+	Parameter3     string    `json:"parameter3"`
+	Parameter4     string    `json:"parameter4"`
+	Parameter5     string    `json:"parameter5"`
+}
+
+type Letter_Credit struct {
+	LcNo           string    `json:"lcNo"`
+	QuoteValidity  string    `json:"quoteValidity"`
+	TotalAmount    string    `json:"totalAmount"`
+	SalesTax       string    `json:"salesTax"`
+	Representative string    `json:"representative"`
+	OrgName        string    `json:"orgName"`
+	Address        string    `json:"address"`
+	AccountName    string    `json:"accountName"`
+	Status         string    `json:"status"`
+	ProductDetails []Details    `json:"productDetails"`
+	Parameter1     string    `json:"parameter1"`
+	Parameter2     string    `json:"parameter2"`
+	Parameter3     string    `json:"parameter3"`
+	Parameter4     string    `json:"parameter4"`
+	Parameter5     string    `json:"parameter5"`
+}
 
 type Property struct {
 	PropId     string  `json:"propid"`
@@ -250,6 +296,26 @@ type Transaction struct {
 	Discount    float64 `json:"discount"`
 }
 
+type ItemDetail struct {
+	ItemNumber  string  `json:"itemNumber"`
+	Quantity    string  `json:"qty"`
+	Description string  `json:"description"`
+	Job         string  `json:"job"`
+	UnitPrice   string  `json:"unitPrice"`
+	LineTotal   string  `json:"lineTotal"`
+}
+
+type Details struct {
+	ItemNo      string  `json:"itemNo"`
+	ItemName    string  `json:"itemName"`
+	ListPrice   string  `json:"listPrice"`
+	Quantity    string  `json:"qty"`
+	Discount    string  `json:"discount"`
+	Amount      string  `json:"amount"`
+	TaxMode     string  `json:"taxMode"`
+	Status      string  `json:"status"`
+}
+
 func (t *SimpleChaincode) Init(stub shim.ChaincodeStubInterface, function string, args []string) ([]byte, error) {
 	// Initialize the collection of commercial paper keys
 	fmt.Println("Initializing paper keys collection")
@@ -260,6 +326,7 @@ func (t *SimpleChaincode) Init(stub shim.ChaincodeStubInterface, function string
 	var blank4 []string
 	var blank5 []string
 	var blank6 []string
+	var blank7 []string
 
 	blankBytes, _ := json.Marshal(&blank)
 	err := stub.PutState("PaperKeys", blankBytes)
@@ -301,7 +368,11 @@ func (t *SimpleChaincode) Init(stub shim.ChaincodeStubInterface, function string
 	if err6 != nil {
 		fmt.Println("Failed to initialize paper key collection")
 	}
-
+	blankBytes7, _ := json.Marshal(&blank7)
+	err7 := stub.PutState("letter_creditKeys", blankBytes7)
+	if err7 != nil {
+		fmt.Println("Failed to initialize paper key collection")
+	}
 
 	fmt.Println("Initialization complete")
 	return nil, nil
@@ -528,8 +599,6 @@ func GetAllQuotes(stub shim.ChaincodeStubInterface) ([]Quote, error) {
 
 	var allquote []Quote
 
-	fmt.Println("retrieving quote Keys ")
-
 	// Get list of all the keys
 	keysBytes, err := stub.GetState("QuoteKeys")
 	if err != nil {
@@ -561,6 +630,152 @@ func GetAllQuotes(stub shim.ChaincodeStubInterface) ([]Quote, error) {
 	return allquote, nil
 }
 
+//Letter_Credit
+func (t *SimpleChaincode) issueLetter_Credit(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
+
+	
+	//need one arg
+	if len(args) != 1 {
+		fmt.Println("error invalid arguments")
+		return nil, errors.New("Incorrect number of arguments. Expecting Quotation record")
+	}
+
+	var lc Letter_Credit
+	var err error
+	//var account Account
+
+	fmt.Println("Unmarshalling Letter_Credit")
+	err = json.Unmarshal([]byte(args[0]), &lc)
+	if err != nil {
+		fmt.Println("error invalid lc issue" + args[0])
+		return nil, errors.New("Invalid lc issue" + args[0])
+	}
+
+	
+
+	fmt.Println("Marshalling lc bytes")
+	//property.PropId = propertyPrefix + property.propid
+
+	fmt.Println("Getting State on lc " + lc.LcNo)
+	cpRxBytes, err := stub.GetState(letter_creditPrefix + lc.LcNo)
+	if cpRxBytes == nil {
+		fmt.Println("lcNo does not exist, creating it")
+		cpBytes, err := json.Marshal(&lc)
+		if err != nil {
+			fmt.Println("Error marshalling lc")
+			return nil, errors.New("Error issuing lc")
+		}
+		err = stub.PutState(letter_creditPrefix + lc.LcNo, cpBytes)
+		if err != nil {
+			fmt.Println("Error issuing lc")
+			return nil, errors.New("Error issuing lc")
+		}
+
+		
+
+		// Update the paper keys by adding the new key
+		fmt.Println("Getting lc Keys")
+		keysBytes, err := stub.GetState("letter_creditKeys")
+		if err != nil {
+			fmt.Println("Error retrieving LcNo")
+			return nil, errors.New("Error retrieving lcNo")
+		}
+		var keys []string
+		err = json.Unmarshal(keysBytes, &keys)
+		if err != nil {
+			fmt.Println("Error unmarshel lcNo")
+			return nil, errors.New("Error unmarshalling lcNo ")
+		}
+
+		fmt.Println("Appending the new key to lcNo Keys")
+		foundKey := false
+		for _, key := range keys {
+			if key == letter_creditPrefix+lc.LcNo {
+				foundKey = true
+			}
+		}
+		if foundKey == false {
+			keys = append(keys, letter_creditPrefix+lc.LcNo)
+			keysBytesToWrite, err := json.Marshal(&keys)
+			if err != nil {
+				fmt.Println("Error marshalling lcNo")
+				return nil, errors.New("Error marshalling the lcNo")
+			}
+			fmt.Println("Put state on lcNo")
+			err = stub.PutState("letter_creditKeys", keysBytesToWrite)
+			if err != nil {
+				fmt.Println("Error writting lcNo back")
+				return nil, errors.New("Error writing the lcNo back")
+			}
+		}
+
+		fmt.Println("Issue commercial paper %+v\n", lc)
+		return nil, nil
+	} else {
+		fmt.Println("lcNo exists")
+
+		var lcrx Letter_Credit
+		fmt.Println("Unmarshalling Letter_Credit " + lc.LcNo)
+		err = json.Unmarshal(cpRxBytes, &lcrx)
+		if err != nil {
+			fmt.Println("Error unmarshalling lc " + lc.LcNo)
+			return nil, errors.New("Error unmarshalling lc " + lc.LcNo)
+		}
+
+		//quoterx.Qty = quoterx.Qty + quote.Qty
+
+		lcrx = lc
+
+
+		cpWriteBytes, err := json.Marshal(&lcrx)
+		if err != nil {
+			fmt.Println("Error marshalling lc")
+			return nil, errors.New("Error issuing lc")
+		}
+		err = stub.PutState(letter_creditPrefix+lc.LcNo, cpWriteBytes)
+		if err != nil {
+			fmt.Println("Error lc")
+			return nil, errors.New("Error issuing lc")
+		}
+
+		fmt.Println("Updated commercial paper %+v\n", lcrx)
+		return nil, nil
+	}
+}
+func GetAllLCs(stub shim.ChaincodeStubInterface) ([]Letter_Credit, error) {
+
+	var allLC []Letter_Credit
+
+	// Get list of all the keys
+	keysBytes, err := stub.GetState("letter_creditKeys")
+	if err != nil {
+		fmt.Println("Error retrieving LC Keys ")
+		return nil, errors.New("Error retrieving LC Keys")
+	}
+	var keys []string
+	err = json.Unmarshal(keysBytes, &keys)
+	if err != nil {
+		fmt.Println("Error unmarshalling LC keys")
+		return nil, errors.New("Error unmarshalling LC keys")
+	}
+
+	// Get all the cps
+	for _, value := range keys {
+		lcBytes, err := stub.GetState(value)
+
+		var lc Letter_Credit
+		err = json.Unmarshal(lcBytes, &lc)
+		if err != nil {
+			fmt.Println("Error retrieving LC " + value)
+			return nil, errors.New("Error retrieving LC " + value)
+		}
+
+		fmt.Println("Appending lc" + value)
+		allLC = append(allLC, lc)
+	}
+
+	return allLC, nil
+}
 
 
 /* Added by Narayanan L for Land Record Management*/
@@ -1777,7 +1992,22 @@ func (t *SimpleChaincode) Query(stub shim.ChaincodeStubInterface, function strin
 			fmt.Println("All success, returning allcps")
 			return allCPsBytes, nil
 		}
-	} else if args[0] == "GetCP" {
+	} else if args[0] == "GetAllLCs" {
+		fmt.Println("Getting particular lc")
+		lc, err := GetCP(args[1], stub)
+		if err != nil {
+			fmt.Println("Error Getting particular lc")
+			return nil, err
+		} else {
+			lcBytes, err1 := json.Marshal(&lc)
+			if err1 != nil {
+				fmt.Println("Error marshalling the lc")
+				return nil, err1
+			}
+			fmt.Println("All success, returning the lc")
+			return lcBytes, nil
+		}
+	}  else if args[0] == "GetCP" {
 		fmt.Println("Getting particular cp")
 		cp, err := GetCP(args[1], stub)
 		if err != nil {
@@ -1948,6 +2178,9 @@ func (t *SimpleChaincode) Invoke(stub shim.ChaincodeStubInterface, function stri
 	} else if function == "addNotification" { //Added for Trade finance 
 		fmt.Println("Firing addNotification")
 		return t.addNotification(stub, args)
+	} else if function == "issueLetter_Credit" { //Added for Trade finance 
+		fmt.Println("Firing issueLetter_Credit")
+		return t.issueLetter_Credit(stub, args)
 	}
 
 
