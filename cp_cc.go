@@ -35,9 +35,9 @@ var proposalPrefix = "pr:"
 var agreementPrefix = "ag:"
 var deedPrefix = "de:"
 var notificationPrefix = "de:"
-var purchase_ordersPrefix = "po:"
+var purchase_orderPrefix = "po:"
 var letter_creditPrefix = "LC:"
-
+var bill_ladingPrefix = "bl:"
 
 var cpPrefix = "cp:"
 var accountPrefix = "acct:"
@@ -146,6 +146,31 @@ type Purchase_Order struct {
 	Parameter3     string    `json:"parameter3"`
 	Parameter4     string    `json:"parameter4"`
 	Parameter5     string    `json:"parameter5"`
+}
+
+type Bill_Lading struct {
+	BlNo           string    `json:"blNo"`
+	SenderName     string    `json:"senderName"`
+	SenderAddress  string    `json:"senderAddress"`
+	SenderSID      string    `json:"senderSID"`
+	SenderFOB      string    `json:"senderFOB"`
+	ReceiverName   string    `json:"receiverName"`
+	ReceiverAddress string   `json:"receiverAddress"`
+	ReceiverSID    string    `json:"receiverSID"`
+	ReceiverFOB    string    `json:"receiverFOB"`
+	OtherPartyName string    `json:"otherPartyname"`
+	OtherpartyAddress string `json:"otherPartyAddress"`
+	CarrierName    string    `json:"carrierName"`
+	TrailerNumber  string    `json:"trailerNumber"`
+	SealNumber     string    `json:"sealNumber"`
+	SCAC           string    `json:"sCAC"`
+	ProNumber      string    `json:"proNumber"`
+	FrieghtChargeTerms string `json:"frieghtChargeTerms"`
+	CODAmount      string    `json:"cODAmount"`
+	FeeTerms       string    `json:"feeTerms"`
+	Status         string    `json:"status"`
+	OrderDetails  []OrderDetail `json:"OrderDetails"`  
+	CarrierInfo   []CarrierInfo `json:"carrierInfo"`
 }
 
 type Letter_Credit struct {
@@ -316,6 +341,26 @@ type Details struct {
 	Status      string  `json:"status"`
 }
 
+type OrderDetail struct {
+	OrderNumber string  `json:"orderNumber"`
+	Noofpack    string  `json:"noofPack"`
+	Weight      string  `json:"weight"`
+	Pallet      string  `json:"pallet"`
+	AdditionalInfo string `json:"additionalInfo"`
+}
+
+type CarrierInfo struct {
+	HandlingQty string  `json:"handlingQty"`
+	HandlingType string `json:"handlingType"`
+	PackageQty  string  `json:"packageQty"`
+	PackageType string  `json:"packageType"`
+	Weight      string  `json:"weight"`
+	Hm          string  `json:"hm"`
+	ComDesc     string  `json:"comDesc"`
+	LTLNMFC     string  `json:"lTLNMFC"`
+	LTLClass    string  `json:"lTLClass"`
+}
+
 func (t *SimpleChaincode) Init(stub shim.ChaincodeStubInterface, function string, args []string) ([]byte, error) {
 	// Initialize the collection of commercial paper keys
 	fmt.Println("Initializing paper keys collection")
@@ -327,6 +372,8 @@ func (t *SimpleChaincode) Init(stub shim.ChaincodeStubInterface, function string
 	var blank5 []string
 	var blank6 []string
 	var blank7 []string
+	var blank8 []string
+	var blank9 []string
 
 	blankBytes, _ := json.Marshal(&blank)
 	err := stub.PutState("PaperKeys", blankBytes)
@@ -371,6 +418,16 @@ func (t *SimpleChaincode) Init(stub shim.ChaincodeStubInterface, function string
 	blankBytes7, _ := json.Marshal(&blank7)
 	err7 := stub.PutState("letter_creditKeys", blankBytes7)
 	if err7 != nil {
+		fmt.Println("Failed to initialize paper key collection")
+	}
+	blankBytes8, _ := json.Marshal(&blank8)
+	err8 := stub.PutState("purchase_orderKeys", blankBytes8)
+	if err8 != nil {
+		fmt.Println("Failed to initialize paper key collection")
+	}
+	blankBytes9, _ := json.Marshal(&blank9)
+	err9 := stub.PutState("bill_ladingKeys", blankBytes9)
+	if err9 != nil {
 		fmt.Println("Failed to initialize paper key collection")
 	}
 
@@ -777,6 +834,300 @@ func GetAllLCs(stub shim.ChaincodeStubInterface) ([]Letter_Credit, error) {
 	return allLC, nil
 }
 
+
+//Purchase_Order
+func (t *SimpleChaincode) issuePurchase_Order(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
+
+	
+	//need one arg
+	if len(args) != 1 {
+		fmt.Println("error invalid arguments")
+		return nil, errors.New("Incorrect number of arguments. Expecting Quotation record")
+	}
+
+	var po Purchase_Order
+	var err error
+	//var account Account
+
+	fmt.Println("Unmarshalling Purchase_Order")
+	err = json.Unmarshal([]byte(args[0]), &po)
+	if err != nil {
+		fmt.Println("error invalid po issue" + args[0])
+		return nil, errors.New("Invalid po issue" + args[0])
+	}
+
+	
+
+	fmt.Println("Marshalling po bytes")
+	//property.PropId = propertyPrefix + property.propid
+
+	fmt.Println("Getting State on po " + po.PONo)
+	cpRxBytes, err := stub.GetState(purchase_orderPrefix + po.PONo)
+	if cpRxBytes == nil {
+		fmt.Println("lcNo does not exist, creating it")
+		cpBytes, err := json.Marshal(&po)
+		if err != nil {
+			fmt.Println("Error marshalling po")
+			return nil, errors.New("Error issuing po")
+		}
+		err = stub.PutState(purchase_orderPrefix + po.PONo, cpBytes)
+		if err != nil {
+			fmt.Println("Error issuing po")
+			return nil, errors.New("Error issuing po")
+		}
+
+		
+
+		// Update the paper keys by adding the new key
+		fmt.Println("Getting po Keys")
+		keysBytes, err := stub.GetState("Purchase_OrderKeys")
+		if err != nil {
+			fmt.Println("Error retrieving PONo")
+			return nil, errors.New("Error retrieving PONo")
+		}
+		var keys []string
+		err = json.Unmarshal(keysBytes, &keys)
+		if err != nil {
+			fmt.Println("Error unmarshel PONo")
+			return nil, errors.New("Error unmarshalling PONo ")
+		}
+
+		fmt.Println("Appending the new key to PONo Keys")
+		foundKey := false
+		for _, key := range keys {
+			if key == purchase_orderPrefix+po.PONo {
+				foundKey = true
+			}
+		}
+		if foundKey == false {
+			keys = append(keys, purchase_orderPrefix+po.PONo)
+			keysBytesToWrite, err := json.Marshal(&keys)
+			if err != nil {
+				fmt.Println("Error marshalling PONo")
+				return nil, errors.New("Error marshalling the PONo")
+			}
+			fmt.Println("Put state on PONo")
+			err = stub.PutState("Purchase_OrderKeys", keysBytesToWrite)
+			if err != nil {
+				fmt.Println("Error writting PONo back")
+				return nil, errors.New("Error writing the PONo back")
+			}
+		}
+
+		fmt.Println("Issue commercial paper %+v\n", po)
+		return nil, nil
+	} else {
+		fmt.Println("PONo exists")
+
+		var porx Purchase_Order
+		fmt.Println("Unmarshalling Purchase_Order " + po.PONo)
+		err = json.Unmarshal(cpRxBytes, &porx)
+		if err != nil {
+			fmt.Println("Error unmarshalling po " + po.PONo)
+			return nil, errors.New("Error unmarshalling po " + po.PONo)
+		}
+
+		//quoterx.Qty = quoterx.Qty + quote.Qty
+
+		porx = po
+
+
+		cpWriteBytes, err := json.Marshal(&porx)
+		if err != nil {
+			fmt.Println("Error marshalling po")
+			return nil, errors.New("Error issuing po")
+		}
+		err = stub.PutState(purchase_orderPrefix+po.PONo, cpWriteBytes)
+		if err != nil {
+			fmt.Println("Error po")
+			return nil, errors.New("Error issuing po")
+		}
+
+		fmt.Println("Updated commercial paper %+v\n", porx)
+		return nil, nil
+	}
+}
+func GetAllPO(stub shim.ChaincodeStubInterface) ([]Purchase_Order, error) {
+
+	var allPO []Purchase_Order
+
+	// Get list of all the keys
+	keysBytes, err := stub.GetState("Purchase_OrderKeys")
+	if err != nil {
+		fmt.Println("Error retrieving po Keys ")
+		return nil, errors.New("Error retrieving po Keys")
+	}
+	var keys []string
+	err = json.Unmarshal(keysBytes, &keys)
+	if err != nil {
+		fmt.Println("Error unmarshalling po keys")
+		return nil, errors.New("Error unmarshalling po keys")
+	}
+
+	// Get all the cps
+	for _, value := range keys {
+		poBytes, err := stub.GetState(value)
+
+		var po Purchase_Order
+		err = json.Unmarshal(poBytes, &po)
+		if err != nil {
+			fmt.Println("Error retrieving po " + value)
+			return nil, errors.New("Error retrieving po " + value)
+		}
+
+		fmt.Println("Appending po" + value)
+		allPO = append(allPO,po)
+	}
+
+	return allPO, nil
+}
+
+//Bill-lading
+func (t *SimpleChaincode) issueBill_Lading(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
+
+	
+	//need one arg
+	if len(args) != 1 {
+		fmt.Println("error invalid arguments")
+		return nil, errors.New("Incorrect number of arguments. Expecting Quotation record")
+	}
+
+	var bl Bill_Lading
+	var err error
+	//var account Account
+
+	fmt.Println("Unmarshalling Bill-Lading")
+	err = json.Unmarshal([]byte(args[0]), &bl)
+	if err != nil {
+		fmt.Println("error invalid bl issue" + args[0])
+		return nil, errors.New("Invalid bl issue" + args[0])
+	}
+
+	
+
+	fmt.Println("Marshalling bl bytes")
+	//property.PropId = propertyPrefix + property.propid
+
+	fmt.Println("Getting State on bl " + bl.BlNo)
+	cpRxBytes, err := stub.GetState(bill_ladingPrefix + bl.BlNo)
+	if cpRxBytes == nil {
+		fmt.Println("BlNo does not exist, creating it")
+		cpBytes, err := json.Marshal(&bl)
+		if err != nil {
+			fmt.Println("Error marshalling bl")
+			return nil, errors.New("Error issuing bl")
+		}
+		err = stub.PutState(bill_ladingPrefix + bl.BlNo, cpBytes)
+		if err != nil {
+			fmt.Println("Error issuing bl")
+			return nil, errors.New("Error issuing bl")
+		}
+
+		
+
+		// Update the paper keys by adding the new key
+		fmt.Println("Getting bl Keys")
+		keysBytes, err := stub.GetState("Bill_LadingKeys")
+		if err != nil {
+			fmt.Println("Error retrieving BlNo")
+			return nil, errors.New("Error retrieving BlNo")
+		}
+		var keys []string
+		err = json.Unmarshal(keysBytes, &keys)
+		if err != nil {
+			fmt.Println("Error unmarshel BlNo")
+			return nil, errors.New("Error unmarshalling BlNo ")
+		}
+
+		fmt.Println("Appending the new key to BlNo Keys")
+		foundKey := false
+		for _, key := range keys {
+			if key == bill_ladingPrefix+bl.BlNo {
+				foundKey = true
+			}
+		}
+		if foundKey == false {
+			keys = append(keys, bill_ladingPrefix+bl.BlNo)
+			keysBytesToWrite, err := json.Marshal(&keys)
+			if err != nil {
+				fmt.Println("Error marshalling BlNo")
+				return nil, errors.New("Error marshalling the BlNo")
+			}
+			fmt.Println("Put state on BlNo")
+			err = stub.PutState("Bill_LadingKeys", keysBytesToWrite)
+			if err != nil {
+				fmt.Println("Error writting BNlo back")
+				return nil, errors.New("Error writing the BlNo back")
+			}
+		}
+
+		fmt.Println("Issue commercial paper %+v\n", bl)
+		return nil, nil
+	} else {
+		fmt.Println("BlNo exists")
+
+		var blrx Bill_Lading
+		fmt.Println("Unmarshalling Bill-lading " + bl.BlNo)
+		err = json.Unmarshal(cpRxBytes, &blrx)
+		if err != nil {
+			fmt.Println("Error unmarshalling bl " + bl.BlNo)
+			return nil, errors.New("Error unmarshalling bl " + bl.BlNo)
+		}
+
+		//quoterx.Qty = quoterx.Qty + quote.Qty
+
+		blrx = bl
+
+
+		cpWriteBytes, err := json.Marshal(&blrx)
+		if err != nil {
+			fmt.Println("Error marshalling bl")
+			return nil, errors.New("Error issuing bl")
+		}
+		err = stub.PutState(bill_ladingPrefix+bl.BlNo, cpWriteBytes)
+		if err != nil {
+			fmt.Println("Error bl")
+			return nil, errors.New("Error issuing bl")
+		}
+
+		fmt.Println("Updated commercial paper %+v\n", blrx)
+		return nil, nil
+	}
+}
+func GetAllBL(stub shim.ChaincodeStubInterface) ([]Bill_Lading, error) {
+
+	var allBL []Bill_Lading
+
+	// Get list of all the keys
+	keysBytes, err := stub.GetState("Bill_LadingKeys")
+	if err != nil {
+		fmt.Println("Error retrieving bl Keys ")
+		return nil, errors.New("Error retrieving bl Keys")
+	}
+	var keys []string
+	err = json.Unmarshal(keysBytes, &keys)
+	if err != nil {
+		fmt.Println("Error unmarshalling bl keys")
+		return nil, errors.New("Error unmarshalling bl keys")
+	}
+
+	// Get all the cps
+	for _, value := range keys {
+		blBytes, err := stub.GetState(value)
+
+		var bl Bill_Lading
+		err = json.Unmarshal(blBytes, &bl)
+		if err != nil {
+			fmt.Println("Error retrieving bl " + value)
+			return nil, errors.New("Error retrieving bl " + value)
+		}
+
+		fmt.Println("Appending bl" + value)
+		allBL= append(allBL,bl)
+	}
+
+	return allBL, nil
+}
 
 /* Added by Narayanan L for Land Record Management*/
 
@@ -2007,6 +2358,36 @@ func (t *SimpleChaincode) Query(stub shim.ChaincodeStubInterface, function strin
 			fmt.Println("All success, returning the lc")
 			return lcBytes, nil
 		}
+	}  else if args[0] == "GetAllPO" {
+		fmt.Println("Getting particular po")
+		po, err := GetCP(args[1], stub)
+		if err != nil {
+			fmt.Println("Error Getting particular po")
+			return nil, err
+		} else {
+			poBytes, err1 := json.Marshal(&po)
+			if err1 != nil {
+				fmt.Println("Error marshalling the po")
+				return nil, err1
+			}
+			fmt.Println("All success, returning the po")
+			return poBytes, nil
+		}
+	} else if args[0] == "GetAllBL" {
+		fmt.Println("Getting particular bl")
+		bl, err := GetCP(args[1], stub)
+		if err != nil {
+			fmt.Println("Error Getting particular bl")
+			return nil, err
+		} else {
+			blBytes, err1 := json.Marshal(&bl)
+			if err1 != nil {
+				fmt.Println("Error marshalling the bl")
+				return nil, err1
+			}
+			fmt.Println("All success, returning the bl")
+			return blBytes, nil
+		}
 	}  else if args[0] == "GetCP" {
 		fmt.Println("Getting particular cp")
 		cp, err := GetCP(args[1], stub)
@@ -2181,7 +2562,14 @@ func (t *SimpleChaincode) Invoke(stub shim.ChaincodeStubInterface, function stri
 	} else if function == "issueLetter_Credit" { //Added for Trade finance 
 		fmt.Println("Firing issueLetter_Credit")
 		return t.issueLetter_Credit(stub, args)
+	} else if function == "issuePurchase_Order" { //Added for Trade finance 
+		fmt.Println("Firing issuePurchase_Order")
+		return t.issuePurchase_Order(stub, args)
+	} else if function == "issueBill_Lading" { //Added for Trade finance 
+		fmt.Println("Firing issueBill_Lading")
+		return t.issueBill_Lading(stub, args)
 	}
+
 
 
 	return nil, errors.New("Received unknown function invocation")
