@@ -2352,22 +2352,22 @@ func (t *SimpleChaincode) Query(stub shim.ChaincodeStubInterface, function strin
 		}
 	} else if args[0] == "GetAllLCs" {
 		fmt.Println("Getting particular lc")
-		lc, err := GetAllLCs(stub)
+		allLC, err := GetAllLCs(stub)
 		if err != nil {
 			fmt.Println("Error Getting particular lc")
 			return nil, err
 		} else {
-			lcBytes, err1 := json.Marshal(&lc)
+			allLCBytes, err1 := json.Marshal(&allLC)
 			if err1 != nil {
 				fmt.Println("Error marshalling the lc")
 				return nil, err1
 			}
 			fmt.Println("All success, returning the lc")
-			return lcBytes, nil
+			return allLCBytes, nil
 		}
 	}  else if args[0] == "GetAllPO" {
 		fmt.Println("Getting particular po")
-		po, err := GetCP(args[1], stub)
+		po, err := GetAllPO(stub)
 		if err != nil {
 			fmt.Println("Error Getting particular po")
 			return nil, err
@@ -2382,7 +2382,7 @@ func (t *SimpleChaincode) Query(stub shim.ChaincodeStubInterface, function strin
 		}
 	} else if args[0] == "GetAllBL" {
 		fmt.Println("Getting particular bl")
-		bl, err := GetCP(args[1], stub)
+		bl, err := GetAllBL(stub)
 		if err != nil {
 			fmt.Println("Error Getting particular bl")
 			return nil, err
