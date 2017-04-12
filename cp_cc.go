@@ -122,6 +122,7 @@ type Quote struct {
 }
 
 type Purchase_Order struct {
+	QuoteNo        string    `json:"quoteno"`
 	PONo           string    `json:"pONo"`
 	VendorName     string    `json:"vendorName"`
 	VendorAddress  string    `json:"vendorAddress"`
@@ -149,6 +150,7 @@ type Purchase_Order struct {
 }
 
 type Bill_Lading struct {
+	QuoteNo        string    `json:"quoteno"`
 	BlNo           string    `json:"blNo"`
 	SenderName     string    `json:"senderName"`
 	SenderAddress  string    `json:"senderAddress"`
@@ -179,6 +181,7 @@ type Bill_Lading struct {
 }
 
 type Letter_Credit struct {
+	QuoteNo        string    `json:"quoteno"`
 	LcNo           string    `json:"lcNo"`
 	QuoteValidity  string    `json:"quoteValidity"`
 	TotalAmount    string    `json:"totalAmount"`
