@@ -171,6 +171,11 @@ type Bill_Lading struct {
 	Status         string    `json:"status"`
 	OrderDetails  []OrderDetail `json:"OrderDetails"`  
 	CarrierInfo   []CarrierInfo `json:"carrierInfo"`
+	Parameter1     string    `json:"parameter1"`
+	Parameter2     string    `json:"parameter2"`
+	Parameter3     string    `json:"parameter3"`
+	Parameter4     string    `json:"parameter4"`
+	Parameter5     string    `json:"parameter5"`
 }
 
 type Letter_Credit struct {
@@ -182,7 +187,9 @@ type Letter_Credit struct {
 	OrgName        string    `json:"orgName"`
 	Address        string    `json:"address"`
 	AccountName    string    `json:"accountName"`
-	Status         string    `json:"status"`
+	ModifiedOn     string    `json:"modifiedon"`
+	RequesterOrg   string    `json:"requesterorg"`
+	Country        string    `json:"country"`
 	ProductDetails []Details    `json:"productDetails"`
 	Parameter1     string    `json:"parameter1"`
 	Parameter2     string    `json:"parameter2"`
@@ -2345,7 +2352,7 @@ func (t *SimpleChaincode) Query(stub shim.ChaincodeStubInterface, function strin
 		}
 	} else if args[0] == "GetAllLCs" {
 		fmt.Println("Getting particular lc")
-		lc, err := GetCP(args[1], stub)
+		lc, err := GetAllLCs(stub)
 		if err != nil {
 			fmt.Println("Error Getting particular lc")
 			return nil, err
