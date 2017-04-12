@@ -2367,33 +2367,33 @@ func (t *SimpleChaincode) Query(stub shim.ChaincodeStubInterface, function strin
 		}
 	}  else if args[0] == "GetAllPO" {
 		fmt.Println("Getting particular po")
-		po, err := GetAllPO(stub)
+		allPO, err := GetAllPO(stub)
 		if err != nil {
 			fmt.Println("Error Getting particular po")
 			return nil, err
 		} else {
-			poBytes, err1 := json.Marshal(&po)
+			allPOBytes, err1 := json.Marshal(&allPO)
 			if err1 != nil {
 				fmt.Println("Error marshalling the po")
 				return nil, err1
 			}
 			fmt.Println("All success, returning the po")
-			return poBytes, nil
+			return allPOBytes, nil
 		}
 	} else if args[0] == "GetAllBL" {
 		fmt.Println("Getting particular bl")
-		bl, err := GetAllBL(stub)
+		allBL, err := GetAllBL(stub)
 		if err != nil {
 			fmt.Println("Error Getting particular bl")
 			return nil, err
 		} else {
-			blBytes, err1 := json.Marshal(&bl)
+			allBLBytes, err1 := json.Marshal(&allBL)
 			if err1 != nil {
 				fmt.Println("Error marshalling the bl")
 				return nil, err1
 			}
 			fmt.Println("All success, returning the bl")
-			return blBytes, nil
+			return allBLBytes, nil
 		}
 	}  else if args[0] == "GetCP" {
 		fmt.Println("Getting particular cp")
