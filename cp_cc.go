@@ -1066,7 +1066,7 @@ func (t *SimpleChaincode) issueBill_Lading(stub shim.ChaincodeStubInterface, arg
 			fmt.Println("Put state on BlNo")
 			err = stub.PutState("Bill_LadingKeys", keysBytesToWrite)
 			if err != nil {
-				fmt.Println("Error writting BNlo back")
+				fmt.Println("Error writting BlNo back")
 				return nil, errors.New("Error writing the BlNo back")
 			}
 		}
