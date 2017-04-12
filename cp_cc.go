@@ -809,9 +809,9 @@ func (t *SimpleChaincode) issueLetter_Credit(stub shim.ChaincodeStubInterface, a
 		return nil, nil
 	}
 }
-func GetAllLCs(stub shim.ChaincodeStubInterface) ([]Letter_Credit, error) {
+func GetAllLcs(stub shim.ChaincodeStubInterface) ([]Letter_Credit, error) {
 
-	var allLC []Letter_Credit
+	var allLc []Letter_Credit
 
 	// Get list of all the keys
 	keysBytes, err := stub.GetState("letter_creditKeys")
@@ -838,10 +838,10 @@ func GetAllLCs(stub shim.ChaincodeStubInterface) ([]Letter_Credit, error) {
 		}
 
 		fmt.Println("Appending lc" + value)
-		allLC = append(allLC, lc)
+		allLc = append(allLc, lc)
 	}
 
-	return allLC, nil
+	return allLc, nil
 }
 
 
@@ -957,9 +957,9 @@ func (t *SimpleChaincode) issuePurchase_Order(stub shim.ChaincodeStubInterface, 
 		return nil, nil
 	}
 }
-func GetAllPO(stub shim.ChaincodeStubInterface) ([]Purchase_Order, error) {
+func GetAllPo(stub shim.ChaincodeStubInterface) ([]Purchase_Order, error) {
 
-	var allPO []Purchase_Order
+	var allPo []Purchase_Order
 
 	// Get list of all the keys
 	keysBytes, err := stub.GetState("Purchase_OrderKeys")
@@ -986,10 +986,10 @@ func GetAllPO(stub shim.ChaincodeStubInterface) ([]Purchase_Order, error) {
 		}
 
 		fmt.Println("Appending po" + value)
-		allPO = append(allPO,po)
+		allPo = append(allPo,po)
 	}
 
-	return allPO, nil
+	return allPo, nil
 }
 
 //Bill-lading
@@ -1104,9 +1104,9 @@ func (t *SimpleChaincode) issueBill_Lading(stub shim.ChaincodeStubInterface, arg
 		return nil, nil
 	}
 }
-func GetAllBL(stub shim.ChaincodeStubInterface) ([]Bill_Lading, error) {
+func GetAllBl(stub shim.ChaincodeStubInterface) ([]Bill_Lading, error) {
 
-	var allBL []Bill_Lading
+	var allBl []Bill_Lading
 
 	// Get list of all the keys
 	keysBytes, err := stub.GetState("Bill_LadingKeys")
@@ -1133,10 +1133,10 @@ func GetAllBL(stub shim.ChaincodeStubInterface) ([]Bill_Lading, error) {
 		}
 
 		fmt.Println("Appending bl" + value)
-		allBL= append(allBL,bl)
+		allBl= append(allBl,bl)
 	}
 
-	return allBL, nil
+	return allBl, nil
 }
 
 /* Added by Narayanan L for Land Record Management*/
@@ -2353,50 +2353,50 @@ func (t *SimpleChaincode) Query(stub shim.ChaincodeStubInterface, function strin
 			fmt.Println("All success, returning allcps")
 			return allCPsBytes, nil
 		}
-	} else if args[0] == "GetAllLCs" {
+	} else if args[0] == "GetAllLcs" {
 		fmt.Println("Getting particular lc")
-		allLC, err := GetAllLCs(stub)
+		allLc, err := GetAllLcs(stub)
 		if err != nil {
 			fmt.Println("Error Getting particular lc")
 			return nil, err
 		} else {
-			allLCBytes, err1 := json.Marshal(&allLC)
+			allLcBytes, err1 := json.Marshal(&allLc)
 			if err1 != nil {
 				fmt.Println("Error marshalling the lc")
 				return nil, err1
 			}
 			fmt.Println("All success, returning the lc")
-			return allLCBytes, nil
+			return allLcBytes, nil
 		}
-	}  else if args[0] == "GetAllPO" {
+	}  else if args[0] == "GetAllPo" {
 		fmt.Println("Getting particular po")
-		allPO, err := GetAllPO(stub)
+		allPo, err := GetAllPo(stub)
 		if err != nil {
 			fmt.Println("Error Getting particular po")
 			return nil, err
 		} else {
-			allPOBytes, err1 := json.Marshal(&allPO)
+			allPoBytes, err1 := json.Marshal(&allPo)
 			if err1 != nil {
 				fmt.Println("Error marshalling the po")
 				return nil, err1
 			}
 			fmt.Println("All success, returning the po")
-			return allPOBytes, nil
+			return allPoBytes, nil
 		}
-	} else if args[0] == "GetAllBL" {
+	} else if args[0] == "GetAllBl" {
 		fmt.Println("Getting particular bl")
-		allBL, err := GetAllBL(stub)
+		allBl, err := GetAllBl(stub)
 		if err != nil {
 			fmt.Println("Error Getting particular bl")
 			return nil, err
 		} else {
-			allBLBytes, err1 := json.Marshal(&allBL)
+			allBlBytes, err1 := json.Marshal(&allBl)
 			if err1 != nil {
 				fmt.Println("Error marshalling the bl")
 				return nil, err1
 			}
 			fmt.Println("All success, returning the bl")
-			return allBLBytes, nil
+			return allBlBytes, nil
 		}
 	}  else if args[0] == "GetCP" {
 		fmt.Println("Getting particular cp")
