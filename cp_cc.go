@@ -436,7 +436,7 @@ func (t *SimpleChaincode) Init(stub shim.ChaincodeStubInterface, function string
 		fmt.Println("Failed to initialize paper key collection")
 	}
 	blankBytes9, _ := json.Marshal(&blank9)
-	err9 := stub.PutState("bill_ladingKeys", blankBytes9)
+	err9 := stub.PutState("Bill_LadingKeys", blankBytes9)
 	if err9 != nil {
 		fmt.Println("Failed to initialize paper key collection")
 	}
