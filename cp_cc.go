@@ -857,7 +857,7 @@ func (t *SimpleChaincode) issuePurchase_Order(stub shim.ChaincodeStubInterface, 
 
 	var po Purchase_Order
 	var err error
-	//var account Account
+	var account Account
 
 	fmt.Println("Unmarshalling Purchase_Order")
 	err = json.Unmarshal([]byte(args[0]), &po)
@@ -869,7 +869,7 @@ func (t *SimpleChaincode) issuePurchase_Order(stub shim.ChaincodeStubInterface, 
 	
 
 	fmt.Println("Marshalling po bytes")
-	//property.PropId = propertyPrefix + property.propid
+	po.PONo = account.Prefix + po.PONo
 
 	fmt.Println("Getting State on po " + po.PONo)
 	cpRxBytes, err := stub.GetState(purchase_orderPrefix + po.PONo)
@@ -2333,7 +2333,7 @@ func (t *SimpleChaincode) transferPaper(stub shim.ChaincodeStubInterface, args [
 }
 
 func (t *SimpleChaincode) Query(stub shim.ChaincodeStubInterface, function string, args []string) ([]byte, error) {
-	//need one arg
+	fmt.Println("Query is running " + function)
 	if len(args) < 1 {
 		return nil, errors.New("Incorrect number of arguments. Expecting ......")
 	}
