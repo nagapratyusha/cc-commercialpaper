@@ -898,8 +898,8 @@ func (t *SimpleChaincode) issuePurchase_Order(stub shim.ChaincodeStubInterface, 
 		var keys []string
 		err = json.Unmarshal(keysBytes, &keys)
 		if err != nil {
-			fmt.Println("Error unmarshel PONo")
-			return nil, errors.New("Error unmarshalling PONo ")
+			fmt.Println("Error unmarshel keys")
+			return nil, errors.New("Error unmarshalling Paper keys ")
 		}
 
 		fmt.Println("Appending the new key to Paper Keys")
