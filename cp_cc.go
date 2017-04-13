@@ -2333,10 +2333,10 @@ func (t *SimpleChaincode) transferPaper(stub shim.ChaincodeStubInterface, args [
 }
 
 func (t *SimpleChaincode) Query(stub shim.ChaincodeStubInterface, function string, args []string) ([]byte, error) {
-	fmt.Println("Query is running " + function)
-	if len(args) < 1 {
-		return nil, errors.New("Incorrect number of arguments. Expecting ......")
-	}
+	
+	//if len(args) < 1 {
+	//	return nil, errors.New("Incorrect number of arguments. Expecting ......")
+	//}
 
 	if args[0] == "GetAllCPs" {
 		fmt.Println("Getting all CPs")
