@@ -121,7 +121,7 @@ type Quote struct {
 	Parameter5  string   `json:"parameter5"`
 }
 
-type Purchase_Order struct {
+type PurchaseOrder struct {
 	QuoteNo        string    `json:"quoteno"`
 	PONo           string    `json:"pONo"`
 	VendorName     string    `json:"vendorName"`
@@ -844,9 +844,8 @@ func GetAllLcs(stub shim.ChaincodeStubInterface) ([]Letter_Credit, error) {
 	return allLc, nil
 }
 
-
 //Purchase_Order
-func (t *SimpleChaincode) issuePurchase_Order(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
+func (t *SimpleChaincode) issuePurchaseOrder(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
 
 	
 	//need one arg
@@ -855,11 +854,11 @@ func (t *SimpleChaincode) issuePurchase_Order(stub shim.ChaincodeStubInterface, 
 		return nil, errors.New("Incorrect number of arguments. Expecting Quotation record")
 	}
 
-	var po Purchase_Order
+	var po PurchaseOrder
 	var err error
 	var account Account
 
-	fmt.Println("Unmarshalling Purchase_Order")
+	fmt.Println("Unmarshalling PurchaseOrder")
 	err = json.Unmarshal([]byte(args[0]), &po)
 	if err != nil {
 		fmt.Println("error invalid po issue" + args[0])
@@ -882,7 +881,7 @@ func (t *SimpleChaincode) issuePurchase_Order(stub shim.ChaincodeStubInterface, 
 		}
 		err = stub.PutState(purchase_orderPrefix + po.PONo, cpBytes)
 		if err != nil {
-			fmt.Println("Error issuing po")
+			fmt.Println("Error issuing paper")
 			return nil, errors.New("Error issuing po")
 		}
 
@@ -890,7 +889,7 @@ func (t *SimpleChaincode) issuePurchase_Order(stub shim.ChaincodeStubInterface, 
 
 		// Update the paper keys by adding the new key
 		fmt.Println("Getting Paper Keys")
-		keysBytes, err := stub.GetState("Purchase_OrderKeys")
+		keysBytes, err := stub.GetState("PurchaseOrderKeys")
 		if err != nil {
 			fmt.Println("Error retrieving paper keys")
 			return nil, errors.New("Error retrieving paper keys")
@@ -917,7 +916,7 @@ func (t *SimpleChaincode) issuePurchase_Order(stub shim.ChaincodeStubInterface, 
 				return nil, errors.New("Error marshalling the PONo")
 			}
 			fmt.Println("Put state on PONo")
-			err = stub.PutState("Purchase_OrderKeys", keysBytesToWrite)
+			err = stub.PutState("PurchaseOrderKeys", keysBytesToWrite)
 			if err != nil {
 				fmt.Println("Error writting PONo back")
 				return nil, errors.New("Error writing the PONo back")
@@ -929,8 +928,8 @@ func (t *SimpleChaincode) issuePurchase_Order(stub shim.ChaincodeStubInterface, 
 	} else {
 		fmt.Println("PONo exists")
 
-		var porx Purchase_Order
-		fmt.Println("Unmarshalling Purchase_Order " + po.PONo)
+		var porx PurchaseOrder
+		fmt.Println("Unmarshalling PurchaseOrder " + po.PONo)
 		err = json.Unmarshal(cpRxBytes, &porx)
 		if err != nil {
 			fmt.Println("Error unmarshalling po " + po.PONo)
@@ -957,12 +956,12 @@ func (t *SimpleChaincode) issuePurchase_Order(stub shim.ChaincodeStubInterface, 
 		return nil, nil
 	}
 }
-func GetAllPo(stub shim.ChaincodeStubInterface) ([]Purchase_Order, error) {
+func GetAllPo(stub shim.ChaincodeStubInterface) ([]PurchaseOrder, error) {
 
-	var allPo []Purchase_Order
+	var allPo []PurchaseOrder
 
 	// Get list of all the keys
-	keysBytes, err := stub.GetState("Purchase_OrderKeys")
+	keysBytes, err := stub.GetState("PurchaseOrderKeys")
 	if err != nil {
 		fmt.Println("Error retrieving po Keys ")
 		return nil, errors.New("Error retrieving po Keys")
@@ -978,7 +977,7 @@ func GetAllPo(stub shim.ChaincodeStubInterface) ([]Purchase_Order, error) {
 	for _, value := range keys {
 		poBytes, err := stub.GetState(value)
 
-		var po Purchase_Order
+		var po PurchaseOrder
 		err = json.Unmarshal(poBytes, &po)
 		if err != nil {
 			fmt.Println("Error retrieving po " + value)
@@ -991,7 +990,6 @@ func GetAllPo(stub shim.ChaincodeStubInterface) ([]Purchase_Order, error) {
 
 	return allPo, nil
 }
-
 //Bill-lading
 func (t *SimpleChaincode) issueBill_Lading(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
 
@@ -2334,9 +2332,9 @@ func (t *SimpleChaincode) transferPaper(stub shim.ChaincodeStubInterface, args [
 
 func (t *SimpleChaincode) Query(stub shim.ChaincodeStubInterface, function string, args []string) ([]byte, error) {
 	
-	//if len(args) < 1 {
-	//	return nil, errors.New("Incorrect number of arguments. Expecting ......")
-	//}
+	if len(args) < 1 {
+		return nil, errors.New("Incorrect number of arguments. Expecting ......")
+	}
 
 	if args[0] == "GetAllCPs" {
 		fmt.Println("Getting all CPs")
@@ -2572,9 +2570,9 @@ func (t *SimpleChaincode) Invoke(stub shim.ChaincodeStubInterface, function stri
 	} else if function == "issueLetter_Credit" { //Added for Trade finance 
 		fmt.Println("Firing issueLetter_Credit")
 		return t.issueLetter_Credit(stub, args)
-	} else if function == "issuePurchase_Order" { //Added for Trade finance 
-		fmt.Println("Firing issuePurchase_Order")
-		return t.issuePurchase_Order(stub, args)
+	} else if function == "issuePurchaseOrder" { //Added for Trade finance 
+		fmt.Println("Firing issuePurchaseOrder")
+		return t.issuePurchaseOrder(stub, args)
 	} else if function == "issueBill_Lading" { //Added for Trade finance 
 		fmt.Println("Firing issueBill_Lading")
 		return t.issueBill_Lading(stub, args)
