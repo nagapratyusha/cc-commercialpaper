@@ -889,11 +889,11 @@ func (t *SimpleChaincode) issuePurchase_Order(stub shim.ChaincodeStubInterface, 
 		
 
 		// Update the paper keys by adding the new key
-		fmt.Println("Getting po Keys")
+		fmt.Println("Getting Paper Keys")
 		keysBytes, err := stub.GetState("Purchase_OrderKeys")
 		if err != nil {
-			fmt.Println("Error retrieving PONo")
-			return nil, errors.New("Error retrieving PONo")
+			fmt.Println("Error retrieving paper keys")
+			return nil, errors.New("Error retrieving paper keys")
 		}
 		var keys []string
 		err = json.Unmarshal(keysBytes, &keys)
@@ -902,7 +902,7 @@ func (t *SimpleChaincode) issuePurchase_Order(stub shim.ChaincodeStubInterface, 
 			return nil, errors.New("Error unmarshalling PONo ")
 		}
 
-		fmt.Println("Appending the new key to PONo Keys")
+		fmt.Println("Appending the new key to Paper Keys")
 		foundKey := false
 		for _, key := range keys {
 			if key == purchase_orderPrefix+po.PONo {
