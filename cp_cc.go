@@ -874,7 +874,7 @@ func (t *SimpleChaincode) issuePurchase_Order(stub shim.ChaincodeStubInterface, 
 	fmt.Println("Getting State on po " + po.PONo)
 	cpRxBytes, err := stub.GetState(purchase_orderPrefix + po.PONo)
 	if cpRxBytes == nil {
-		fmt.Println("pONo does not exist, creating it")
+		fmt.Println("PONo does not exist, creating it")
 		cpBytes, err := json.Marshal(&po)
 		if err != nil {
 			fmt.Println("Error marshalling po")
