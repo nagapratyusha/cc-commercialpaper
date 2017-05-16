@@ -113,7 +113,7 @@ type Quote struct {
 	IssueDate string  `json:"issueDate"`
 	ModifiedOn    string  `json:"modifiedon"`
 	RequesterOrg    string  `json:"requesterorg"`
-	Price 		[]prices   `json:"price"`
+	Price 		string   `json:"price"`
 	Country    string  `json:"country"`
 	Parameter1 	string  `json:"parameter1"`
 	Parameter2  string   `json:"parameter2"`
