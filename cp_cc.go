@@ -102,7 +102,7 @@ type Notification struct {
 }
 
 type Quote struct {
-	QuoteNo     string  `json:"quoteno"`
+	QuoteNo     string  `json:"quoteNo"`
 	Item    string  `json:"item"`
 	Qty    string  `json:"qty"`
 	ShipTerm    string  `json:"shipterm"`
