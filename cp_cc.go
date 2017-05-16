@@ -113,6 +113,7 @@ type Quote struct {
 	IssueDate string  `json:"issueDate"`
 	ModifiedOn    string  `json:"modifiedon"`
 	RequesterOrg    string  `json:"requesterorg"`
+	Price 		[]prices   `json:"price"`
 	Country    string  `json:"country"`
 	Parameter1 	string  `json:"parameter1"`
 	Parameter2  string   `json:"parameter2"`
@@ -369,6 +370,18 @@ type CarrierInfo struct {
 	ComDesc     string  `json:"comDesc"`
 	LTLNMFC     string  `json:"lTLNMFC"`
 	LTLClass    string  `json:"lTLClass"`
+}
+
+type prices struct {
+	Value         string  `json:"value"`
+	Item_type     string  `json:"item_type"`
+	Qty_type	  string  `json:"qty_type"`
+	Last_updated  string  `json:"last_updated"`
+	Last_updated_by string  `json:"last_updated_by"`
+	Last_updated_by_type  string  `json:"last_updated_by_type"`
+	Last_updated_msg   string  `json:"last_updated_msg"`
+	Notification_type  string  `json:"notification_type"`
+	Notification_id    string  `json:"notification_id"`
 }
 
 func (t *SimpleChaincode) Init(stub shim.ChaincodeStubInterface, function string, args []string) ([]byte, error) {
