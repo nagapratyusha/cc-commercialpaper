@@ -710,6 +710,59 @@ func GetAllQuotes(stub shim.ChaincodeStubInterface) ([]Quote, error) {
 	return allquote, nil
 }
 
+//ChangeStatusQuotes
+func (t *SimpleChaincode) ChangeStatusQuote(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
+	if len(args) != 1 {
+		fmt.Println("error invalid arguments")
+		return nil, errors.New("Incorrect number of arguments. Expecting commercial paper record")
+	}
+
+	var quote Quote
+	var err error
+	
+
+	fmt.Println("Unmarshalling Quote")
+	
+	err = json.Unmarshal([]byte(args[0]), &quote)
+	if err != nil {
+		fmt.Println("error invalid quote issue")
+		return nil, errors.New("Invalid commercial quote issue")
+	}
+
+	//quote.status = args[1]
+		fmt.Println("QuoteNo exists")
+
+		var quoterx Quote
+		fmt.Println("Unmarshalling Quote " + quote.QuoteNo)
+		
+		if err != nil {
+			fmt.Println("Error unmarshalling quote " + quote.QuoteNo)
+			return nil, errors.New("Error unmarshalling quote " + quote.QuoteNo)
+		}
+
+		quoterx.Status = quoterx.Status + quote.Status
+
+		
+		quoteWriteBytes, err := json.Marshal(&quoterx)
+		if err != nil {
+			fmt.Println("Error marshalling quote")
+			return nil, errors.New("Error issuing quotes")
+		}
+		err = stub.PutState(quotePrefix+quote.QuoteNo, quoteWriteBytes)
+		if err != nil {
+			fmt.Println("Error issuing quote")
+			return nil, errors.New("Error issuing quote")
+		}
+
+		fmt.Println("Updated quote %+v\n", quoterx)
+		return nil, nil
+	
+	
+
+	
+	
+}
+
 //Letter_Credit
 func (t *SimpleChaincode) issueLetter_Credit(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
 
@@ -1955,11 +2008,33 @@ func (t *SimpleChaincode) issueCommercialPaper(stub shim.ChaincodeStubInterface,
 	var account Account
 
 	fmt.Println("Unmarshalling CP")
+	//err = json.Unmarshal([]byte(args[0]), &cp)
 	err = json.Unmarshal([]byte(args[0]), &cp)
 	if err != nil {
 		fmt.Println("error invalid paper issue")
 		return nil, errors.New("Invalid commercial paper issue")
 	}
+
+	//quote.status = args[1]
+
+	/*
+		cpWriteBytes, err := json.Marshal(&cprx)
+		if err != nil {
+			fmt.Println("Error marshalling cp")
+			return nil, errors.New("Error issuing commercial paper")
+		}
+		err = stub.PutState(cpPrefix+cp.CUSIP, cpWriteBytes)
+		if err != nil {
+			fmt.Println("Error issuing paper")
+			return nil, errors.New("Error issuing commercial paper")
+		}
+
+		fmt.Println("Updated commercial paper %+v\n", cprx)
+		return nil, nil
+	
+	
+
+	*/
 
 	//generate the CUSIP
 	//get account prefix
