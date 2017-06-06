@@ -711,7 +711,7 @@ func GetAllQuotes(stub shim.ChaincodeStubInterface) ([]Quote, error) {
 }
 
 //ChangeStatusQuotes
-func (t *SimpleChaincode) ChangeStatusQuote(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
+/* func (t *SimpleChaincode) ChangeStatusQuote(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
 	if len(args) != 1 {
 		fmt.Println("error invalid arguments")
 		return nil, errors.New("Incorrect number of arguments. Expecting commercial paper record")
@@ -730,7 +730,7 @@ func (t *SimpleChaincode) ChangeStatusQuote(stub shim.ChaincodeStubInterface, ar
 	}
 
 	//quote.status = args[1]
-		fmt.Println("QuoteNo exists")
+	/*	fmt.Println("QuoteNo exists")
 
 		var quoterx Quote
 		fmt.Println("Unmarshalling Quote " + quote.QuoteNo)
@@ -761,7 +761,7 @@ func (t *SimpleChaincode) ChangeStatusQuote(stub shim.ChaincodeStubInterface, ar
 
 	
 	
-}
+  } */
 
 //Letter_Credit
 func (t *SimpleChaincode) issueLetter_Credit(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
@@ -2664,10 +2664,11 @@ func (t *SimpleChaincode) Invoke(stub shim.ChaincodeStubInterface, function stri
 	} else if function == "issueBill_Lading" { //Added for Trade finance 
 		fmt.Println("Firing issueBill_Lading")
 		return t.issueBill_Lading(stub, args)
-	} else if function == "ChangeStatusQuote" {
-		fmt.Println("Firing ChangeStatusQuote")
-		return t.ChangeStatusQuote(stub, args)
-	}
+	} 
+	//else if function == "ChangeStatusQuote" {
+	//	fmt.Println("Firing ChangeStatusQuote")
+	//	return t.ChangeStatusQuote(stub, args)
+	//}
 
 
 
