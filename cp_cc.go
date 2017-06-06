@@ -2664,6 +2664,9 @@ func (t *SimpleChaincode) Invoke(stub shim.ChaincodeStubInterface, function stri
 	} else if function == "issueBill_Lading" { //Added for Trade finance 
 		fmt.Println("Firing issueBill_Lading")
 		return t.issueBill_Lading(stub, args)
+	} else if function == "ChangeStatusQuote" {
+		fmt.Println("Firing ChangeStatusQuote")
+		return t.ChangeStatusQuote(stub, args)
 	}
 
 
