@@ -675,6 +675,120 @@ func (t *SimpleChaincode) issueQuote(stub shim.ChaincodeStubInterface, args []st
 		
 	}
 }
+
+//ChangeStatusQuote
+func (t *SimpleChaincode) ChangeStatusQuote(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
+
+ 
+
+               
+
+                //need one arg
+
+                if len(args) < 3 {
+
+                                fmt.Println("error invalid arguments")
+
+                                return nil, errors.New("Incorrect number of arguments. Expecting Quotation record")
+
+                }
+
+ 
+
+                var quote Quote
+
+                var err error
+
+                var account Account
+
+ 
+
+               
+
+ 
+
+                fmt.Println("Marshalling Quote bytes")
+
+                quote.QuoteNo = account.Prefix + args[0]
+
+ 
+
+                fmt.Println("Getting State on CP " + args[0])
+
+                cpRxBytes, err := stub.GetState(quotePrefix + args[0])
+
+                if cpRxBytes != nil {
+
+                                fmt.Println("QuoteNo exists")
+
+ 
+
+                                var quoterx Quote
+
+                                fmt.Println("Unmarshalling CP " + args[0])
+
+                                err = json.Unmarshal(cpRxBytes, &quoterx)
+
+                                if err != nil {
+
+                                                fmt.Println("Error unmarshalling cp " + args[0])
+
+                                                return nil, errors.New("Error unmarshalling cp " + args[0])
+
+                                }
+
+ 
+
+                               
+
+ 
+
+                                quoterx.Status = args[1]
+
+                                quoterx.Price = args[2]
+
+ 
+
+                               
+
+ 
+
+ 
+
+                                cpWriteBytes, err := json.Marshal(&quoterx)
+
+                                if err != nil {
+
+                                                fmt.Println("Error marshalling cp")
+
+                                                return nil, errors.New("Error issuing commercial paper")
+
+                                }
+
+                                err = stub.PutState(quotePrefix+args[0], cpWriteBytes)
+
+                                if err != nil {
+
+                                                fmt.Println("Error issuing paper")
+
+                                                return nil, errors.New("Error issuing commercial paper")
+
+                                }
+
+ 
+
+                                fmt.Println("Updated commercial paper %+v\n", quoterx)
+
+                                return nil, nil
+
+                               
+
+                }
+                return nil, nil
+}
+
+
+
 func GetAllQuotes(stub shim.ChaincodeStubInterface) ([]Quote, error) {
 
 	var allquote []Quote
@@ -822,6 +936,87 @@ func (t *SimpleChaincode) issueLetter_Credit(stub shim.ChaincodeStubInterface, a
 		return nil, nil
 	}
 }
+
+//ChangeStatusLC
+func (t *SimpleChaincode) ChangeStatusLC(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
+
+   //need one arg
+      if len(args) < 3 {
+		 fmt.Println("error invalid arguments")
+			return nil, errors.New("Incorrect number of arguments. Expecting Quotation record")
+
+                }
+
+ 				 var quote Quote
+
+                var err error
+
+                var account Account
+
+                fmt.Println("Marshalling Quote bytes")
+
+                quote.QuoteNo = account.Prefix + args[0]
+
+ 
+
+                fmt.Println("Getting State on CP " + args[0])
+
+                cpRxBytes, err := stub.GetState(quotePrefix + args[0])
+
+                if cpRxBytes != nil {
+
+                    fmt.Println("QuoteNo exists")
+
+                    var quoterx Quote
+
+                    fmt.Println("Unmarshalling CP " + args[0])
+
+                    err = json.Unmarshal(cpRxBytes, &quoterx)
+
+                    if err != nil {
+
+                        fmt.Println("Error unmarshalling cp " + args[0])
+
+                        return nil, errors.New("Error unmarshalling cp " + args[0])
+
+                            }
+
+                            quoterx.Status = args[1]
+
+                             
+                            cpWriteBytes, err := json.Marshal(&quoterx)
+
+                            if err != nil {
+
+                                fmt.Println("Error marshalling cp")
+
+                                return nil, errors.New("Error issuing commercial paper")
+
+                                }
+
+                            err = stub.PutState(quotePrefix+args[0], cpWriteBytes)
+
+                                if err != nil {
+
+                                fmt.Println("Error issuing paper")
+
+                                return nil, errors.New("Error issuing commercial paper")
+
+                                }
+
+ 
+
+                                fmt.Println("Updated commercial paper %+v\n", quoterx)
+
+                                return nil, nil
+
+                               
+
+                }
+                return nil, nil
+}
+
+
 func GetAllLcs(stub shim.ChaincodeStubInterface) ([]Letter_Credit, error) {
 
 	var allLc []Letter_Credit
@@ -856,6 +1051,8 @@ func GetAllLcs(stub shim.ChaincodeStubInterface) ([]Letter_Credit, error) {
 
 	return allLc, nil
 }
+
+
 
 //Purchase_Order
 func (t *SimpleChaincode) issuePurchaseOrder(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
@@ -968,6 +1165,85 @@ func (t *SimpleChaincode) issuePurchaseOrder(stub shim.ChaincodeStubInterface, a
 		fmt.Println("Updated commercial paper %+v\n", porx)
 		return nil, nil
 	}
+}
+
+//ChangeStatusPO
+func (t *SimpleChaincode) ChangeStatusPO(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
+
+   //need one arg
+      if len(args) < 3 {
+		 fmt.Println("error invalid arguments")
+			return nil, errors.New("Incorrect number of arguments. Expecting Quotation record")
+
+                }
+
+ 				 var quote Quote
+
+                var err error
+
+                var account Account
+
+                fmt.Println("Marshalling Quote bytes")
+
+                quote.QuoteNo = account.Prefix + args[0]
+
+ 
+
+                fmt.Println("Getting State on CP " + args[0])
+
+                cpRxBytes, err := stub.GetState(quotePrefix + args[0])
+
+                if cpRxBytes != nil {
+
+                    fmt.Println("QuoteNo exists")
+
+                    var quoterx Quote
+
+                    fmt.Println("Unmarshalling CP " + args[0])
+
+                    err = json.Unmarshal(cpRxBytes, &quoterx)
+
+                    if err != nil {
+
+                        fmt.Println("Error unmarshalling cp " + args[0])
+
+                        return nil, errors.New("Error unmarshalling cp " + args[0])
+
+                            }
+
+                            quoterx.Status = args[1]
+
+                             
+                            cpWriteBytes, err := json.Marshal(&quoterx)
+
+                            if err != nil {
+
+                                fmt.Println("Error marshalling cp")
+
+                                return nil, errors.New("Error issuing commercial paper")
+
+                                }
+
+                            err = stub.PutState(quotePrefix+args[0], cpWriteBytes)
+
+                                if err != nil {
+
+                                fmt.Println("Error issuing paper")
+
+                                return nil, errors.New("Error issuing commercial paper")
+
+                                }
+
+ 
+
+                                fmt.Println("Updated commercial paper %+v\n", quoterx)
+
+                                return nil, nil
+
+                               
+
+                }
+                return nil, nil
 }
 func GetAllPo(stub shim.ChaincodeStubInterface) ([]PurchaseOrder, error) {
 
@@ -1114,6 +1390,85 @@ func (t *SimpleChaincode) issueBill_Lading(stub shim.ChaincodeStubInterface, arg
 		fmt.Println("Updated commercial paper %+v\n", blrx)
 		return nil, nil
 	}
+}
+
+//ChangeStatusBL
+func (t *SimpleChaincode) ChangeStatusBL(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
+
+   //need one arg
+      if len(args) < 3 {
+		 fmt.Println("error invalid arguments")
+			return nil, errors.New("Incorrect number of arguments. Expecting Quotation record")
+
+                }
+
+ 				 var quote Quote
+
+                var err error
+
+                var account Account
+
+                fmt.Println("Marshalling Quote bytes")
+
+                quote.QuoteNo = account.Prefix + args[0]
+
+ 
+
+                fmt.Println("Getting State on CP " + args[0])
+
+                cpRxBytes, err := stub.GetState(quotePrefix + args[0])
+
+                if cpRxBytes != nil {
+
+                    fmt.Println("QuoteNo exists")
+
+                    var quoterx Quote
+
+                    fmt.Println("Unmarshalling CP " + args[0])
+
+                    err = json.Unmarshal(cpRxBytes, &quoterx)
+
+                    if err != nil {
+
+                        fmt.Println("Error unmarshalling cp " + args[0])
+
+                        return nil, errors.New("Error unmarshalling cp " + args[0])
+
+                            }
+
+                            quoterx.Status = args[1]
+
+                             
+                            cpWriteBytes, err := json.Marshal(&quoterx)
+
+                            if err != nil {
+
+                                fmt.Println("Error marshalling cp")
+
+                                return nil, errors.New("Error issuing commercial paper")
+
+                                }
+
+                            err = stub.PutState(quotePrefix+args[0], cpWriteBytes)
+
+                                if err != nil {
+
+                                fmt.Println("Error issuing paper")
+
+                                return nil, errors.New("Error issuing commercial paper")
+
+                                }
+
+ 
+
+                                fmt.Println("Updated commercial paper %+v\n", quoterx)
+
+                                return nil, nil
+
+                               
+
+                }
+                return nil, nil
 }
 func GetAllBl(stub shim.ChaincodeStubInterface) ([]Bill_Lading, error) {
 
@@ -2589,6 +2944,18 @@ func (t *SimpleChaincode) Invoke(stub shim.ChaincodeStubInterface, function stri
 	} else if function == "issueBill_Lading" { //Added for Trade finance 
 		fmt.Println("Firing issueBill_Lading")
 		return t.issueBill_Lading(stub, args)
+	} else if function == "ChangeStatusQuote" { //Added for Trade finance 
+		fmt.Println("Firing ChangeStatusQuote")
+		return t.ChangeStatusQuote(stub, args)
+	} else if function == "ChangeStatusPO" { //Added for Trade finance 
+		fmt.Println("Firing ChangeStatusPO")
+		return t.ChangeStatusPO(stub, args)
+	} else if function == "ChangeStatusLC" { //Added for Trade finance 
+		fmt.Println("Firing ChangeStatusLC")
+		return t.ChangeStatusLC(stub, args)
+	} else if function == "ChangeStatusBL" { //Added for Trade finance 
+		fmt.Println("Firing ChangeStatusBL")
+		return t.ChangeStatusBL(stub, args)
 	}
 
 
